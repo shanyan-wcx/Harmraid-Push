@@ -6,10 +6,16 @@
 <!ENTITY pluginURL "https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/&name;.plg">
 <!ENTITY github    "https://github.com/shanyan-wcx/Harmraid-Push">
 ]>
-<PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" github="&github;" supportURL="&github;" description="A push notification plugin for the Harmraid app.">
+<PLUGIN name="&name;" author="&author;" version="&version;" launch="Settings/HarmraidPush" pluginURL="&pluginURL;" github="&github;" supportURL="&github;" description="A push notification plugin for the Harmraid app.">
   <CHANGES>
   </CHANGES>
   <ICON>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/icon.png</ICON>
+  <FILE Run="/bin/bash">
+    <INLINE>
+set -e
+rm -rf /usr/local/emhttp/plugins/harmraid-push
+    </INLINE>
+  </FILE>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/send-push.sh">
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/send-push.sh</URL>
     <RUN mode="755">chmod +x /usr/local/emhttp/plugins/harmraid-push/send-push.sh</RUN>
