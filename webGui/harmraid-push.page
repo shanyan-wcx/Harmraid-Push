@@ -1,6 +1,7 @@
 #!/bin/bash
 # Harmraid Push - Unraid WebGUI 配置页面
 # 通过 Unraid 的 emhttp 网页服务器加载
+# 注意：Unraid 会自动包裹布局，不需要输出 DOCTYPE/html/head/body
 
 source /usr/local/emhttp/plugins/dynamix/include/Wrappers.php
 
@@ -70,12 +71,7 @@ token=$(cat "$TOKEN_FILE" 2>/dev/null || echo "")
 token_display="${token:0:16}..."
 [ -z "$token" ] && token_display="未注册"
 
-# 渲染配置页面
-echo "<!DOCTYPE html>"
-echo "<html>"
-echo "<head><title>Harmraid Push 设置</title>"
-echo "<link rel='stylesheet' href='/webGui/styles/default.css'>"
-echo "</head><body>"
+# 渲染配置页面（不加外层 HTML 结构，Unraid 自动布局）
 echo "<h1>Harmraid 推送通知</h1>"
 echo "<p>将 Unraid 通知推送到您的 Harmraid App。</p>"
 echo "<hr>"
@@ -107,4 +103,3 @@ echo "<p>推送令牌: ${token_display}</p>"
 
 echo "<br><input type='submit' value='保存设置' class='button'>"
 echo "</form>"
-echo "</body></html>"

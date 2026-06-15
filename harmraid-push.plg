@@ -6,9 +6,10 @@
 <!ENTITY pluginURL "https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/&name;.plg">
 <!ENTITY github    "https://github.com/shanyan-wcx/Harmraid-Push">
 ]>
-<PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" github="&github;">
+<PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" github="&github;" supportURL="&github;">
   <CHANGES>
   </CHANGES>
+  <ICON>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/icon.png</ICON>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/README.md">
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/README.md</URL>
   </FILE>
