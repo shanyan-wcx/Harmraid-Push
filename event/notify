@@ -1,0 +1,12 @@
+#!/bin/bash
+# Harmraid Push - Unraid notification event hook
+# This script is called by Unraid's notification system
+
+# Get notification details from environment variables
+TITLE="${NOTIFICATION_SUBJECT:-$1}"
+CONTENT="${NOTIFICATION_DESCRIPTION:-$2}"
+SEVERITY="${NOTIFICATION_SEVERITY:-info}"
+
+# Forward to push script
+/usr/local/emhttp/plugins/harmraid-push/send-push.sh \
+  "$TITLE" "$CONTENT" "$SEVERITY"

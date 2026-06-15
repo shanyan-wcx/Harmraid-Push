@@ -1,0 +1,38 @@
+#!/bin/bash
+# Harmraid Push - Configuration helper script
+# Called by webGUI when settings are saved or by app API
+
+CONFIG_DIR="/boot/config/plugins/harmraid-push"
+PUSH_ENABLED_FILE="${CONFIG_DIR}/push_enabled.txt"
+TYPES_FILE="${CONFIG_DIR}/types.txt"
+SETTINGS_FILE="${CONFIG_DIR}/settings.json"
+
+ACTION="${1:-status}"
+
+case "$ACTION" in
+  status)
+    push_enabled=$(cat "$PUSH_ENABLED_FILE" 2>/dev/null || echo "false")
+    push_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,error")
+    echo '{"pushEnabled":'${push_enabled}',"pushTypes":"'${push_types}'"}'
+    ;;
+  enable)
+    echo "true" > "$PUSH_ENABLED_FILE"
+    logger -t harmraid-push "Push enabled"
+    echo '{"status":"ok"}'
+    ;;
+  disable)
+    echo "false" > "$PUSH_ENABLED_FILE"
+    logger -t harmraid-push "Push disabled"
+    echo '{"status":"ok"}'
+    ;;
+  set-types)
+    TYPES="${2:-alert,warning,error}"
+    echo "$TYPES" > "$TYPES_FILE"
+    logger -t harmraid-push "Push types set to: $TYPES"
+    echo '{"status":"ok"}'
+    ;;
+  *)
+    echo "Usage: $0 {status|enable|disable|set-types <types>}"
+    exit 1
+    ;;
+esac

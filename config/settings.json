@@ -1,0 +1,7 @@
+{
+  "version": "1.0.0",
+  "pushEnabled": false,
+  "pushTypes": "alert,warning,error",
+  "hasCredentials": false,
+  "configStatus": "unconfigured"
+}

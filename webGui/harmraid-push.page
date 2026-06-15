@@ -1,0 +1,113 @@
+#!/bin/bash
+# Harmraid Push - Unraid WebGUI Configuration Page
+#
+# This page is sourced by Unraid's emhttp web server.
+# It provides a settings UI in the Unraid management interface.
+
+source /usr/local/emhttp/plugins/dynamix/include/Wrappers.php
+
+# Configuration paths
+CONFIG_DIR="/boot/config/plugins/harmraid-push"
+PUSH_ENABLED_FILE="${CONFIG_DIR}/push_enabled.txt"
+TYPES_FILE="${CONFIG_DIR}/types.txt"
+TOKEN_FILE="${CONFIG_DIR}/push_token.txt"
+APP_ID_FILE="${CONFIG_DIR}/app_id.txt"
+APP_SECRET_FILE="${CONFIG_DIR}/app_secret.txt"
+SETTINGS_FILE="${CONFIG_DIR}/settings.json"
+
+# Handle form submission
+if echo "${QUERY_STRING}" | grep -q "action=save"; then
+  # Parse form data
+  push_enabled=$(echo "${QUERY_STRING}" | sed -n 's/.*push_enabled=//p' | cut -d'&' -f1 | sed 's/%20/ /g')
+  push_types=$(echo "${QUERY_STRING}" | sed -n 's/.*push_types=//p' | cut -d'&' -f1 | sed 's/%20/ /g')
+  app_id=$(echo "${QUERY_STRING}" | sed -n 's/.*app_id=//p' | cut -d'&' -f1 | sed 's/%20/ /g')
+  app_secret=$(echo "${QUERY_STRING}" | sed -n 's/.*app_secret=//p' | cut -d'&' -f1 | sed 's/%20/ /g')
+
+  [ -n "$push_enabled" ] && echo "$push_enabled" > "$PUSH_ENABLED_FILE"
+  [ -n "$push_types" ] && echo "$push_types" > "$TYPES_FILE"
+  [ -n "$app_id" ] && echo "$app_id" > "$APP_ID_FILE"
+  [ -n "$app_secret" ] && echo "$app_secret" > "$APP_SECRET_FILE"
+
+  # Update JSON settings
+  cat > "$SETTINGS_FILE" << EOFJSON
+{
+  "pushEnabled": ${push_enabled:-true},
+  "pushTypes": "$push_types",
+  "hasCredentials": false,
+  "configStatus": "configured"
+}
+EOFJSON
+
+  echo "Settings saved"
+  exit 0
+fi
+
+# Support JSON API for app
+if echo "${QUERY_STRING}" | grep -q "format=json"; then
+  push_enabled=$(cat "$PUSH_ENABLED_FILE" 2>/dev/null || echo "false")
+  push_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,error")
+  has_credentials="false"
+  [ -f "$APP_ID_FILE" ] && [ -f "$APP_SECRET_FILE" ] && has_credentials="true"
+  version="1.0.0"
+
+  cat << EOFJSON
+{
+  "installed": true,
+  "version": "${version}",
+  "pushEnabled": ${push_enabled},
+  "pushTypes": "${push_types}",
+  "hasCredentials": ${has_credentials},
+  "configStatus": "configured"
+}
+EOFJSON
+  exit 0
+fi
+
+# Read current values
+push_enabled=$(cat "$PUSH_ENABLED_FILE" 2>/dev/null || echo "false")
+push_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,error")
+app_id=$(cat "$APP_ID_FILE" 2>/dev/null || echo "")
+app_secret=$(cat "$APP_SECRET_FILE" 2>/dev/null || echo "")
+token=$(cat "$TOKEN_FILE" 2>/dev/null || echo "")
+token_display="${token:0:16}..." 
+[ -z "$token" ] && token_display="Not registered"
+
+# Render settings page
+echo "<!DOCTYPE html>"
+echo "<html>"
+echo "<head><title>Harmraid Push Settings</title>"
+echo "<link rel='stylesheet' href='/webGui/styles/default.css'>"
+echo "</head><body>"
+echo "<h1>Harmraid Push Notification</h1>"
+echo "<p>Send Unraid notifications to your Harmraid app via HMS Push Kit.</p>"
+echo "<hr>"
+
+echo "<form method='GET' action='/plugins/harmraid-push/harmraid-push.page'>"
+echo "<input type='hidden' name='action' value='save'>"
+
+echo "<h3>Push Status</h3>"
+echo "<label><input type='checkbox' name='push_enabled' value='true' $( [ "$push_enabled" = "true" ] && echo "checked")> Enable push notifications</label>"
+echo "<br><br>"
+
+echo "<h3>Notification Types</h3>"
+echo "<p>Select which notification types to forward:</p>"
+for type_name in "alert" "warning" "error" "info"; do
+  checked=""
+  echo "$push_types" | grep -q "$type_name" && checked="checked"
+  echo "<label><input type='checkbox' name='push_types' value='${type_name}' ${checked}> ${type_name^}</label><br>"
+done
+echo "<br>"
+
+echo "<h3>HMS Credentials</h3>"
+echo "<p>Enter your Huawei Mobile Services credentials from AppGallery Connect.</p>"
+echo "<label>App ID:</label><br>"
+echo "<input type='text' name='app_id' value='${app_id}' size='40'><br><br>"
+echo "<label>App Secret:</label><br>"
+echo "<input type='password' name='app_secret' value='${app_secret}' size='40'><br><br>"
+
+echo "<h3>Device Status</h3>"
+echo "<p>Push Token: ${token_display}</p>"
+
+echo "<br><input type='submit' value='Save Settings' class='button'>"
+echo "</form>"
+echo "</body></html>"
