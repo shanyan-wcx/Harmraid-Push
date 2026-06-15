@@ -1,91 +1,77 @@
 # Harmraid Push
 
-Unraid push notification plugin for [Harmraid](https://github.com/shanyan-wcx/Harmraid) app.
+[Harmraid](https://github.com/shanyan-wcx/Harmraid) 应用的 Unraid 推送通知插件。
 
-Forwards Unraid notifications to your HarmonyOS device via **HMS Push Kit**.
+将 Unraid 的通知通过 **HMS Push Kit** 推送到您的 HarmonyOS 设备。
 
-## Features
+## 功能
 
-- Real-time push notifications from Unraid to your phone
-- Configurable notification types (alert, warning, error, info)
-- Toggle push on/off from Unraid WebGUI
-- Secure HMS credentials stored on USB flash drive
-- Works even when Harmraid app is killed (system-level push)
+- 实时推送 Unraid 通知到手机
+- 可配置通知类型（告警、警告、错误、普通通知）
+- 在 Unraid WebGUI 中启停推送
+- 无需应用常驻后台（系统级推送）
 
-## Requirements
+## 要求
 
 - Unraid 6.12+
-- Harmraid app installed on a HarmonyOS device (API 24+)
-- HMS Push Kit credentials from [AppGallery Connect](https://developer.huawei.com/consumer/cn/service/josp/agc/index.html)
+- 已安装 [Harmraid](https://github.com/shanyan-wcx/Harmraid) 应用的 HarmonyOS 设备（API 24+）
 
-## Installation
+## 安装
 
-### Via Unraid Community Apps (recommended)
+### 通过 Community Apps（推荐）
 
-1. Open Unraid WebGUI
-2. Go to **Apps** tab
-3. Search for **Harmraid Push**
-4. Click **Install**
+1. 打开 Unraid WebGUI
+2. 进入 **Apps** 页面
+3. 搜索 **Harmraid Push**
+4. 点击 **Install**
 
-### Manual Installation
+### 手动安装
 
 ```bash
-# SSH into your Unraid server
+# 通过 SSH 连接到 Unraid 服务器
 cd /tmp
 wget https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/harmraid-push.plg
 installplg harmraid-push.plg
 ```
 
-Or via Unraid WebGUI:
-1. Go to **Plugins** tab
-2. Paste `https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/harmraid-push.plg`
-3. Click **Install**
+或通过 Unraid WebGUI：
+1. 进入 **Plugins** 页面
+2. 粘贴 `https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/harmraid-push.plg`
+3. 点击 **Install**
 
-## Configuration
+## 配置
 
-1. Go to **Settings > Notification Settings** in Unraid WebGUI
-2. Enable push notifications
-3. Select notification types to forward
-4. Enter your HMS App ID and App Secret
-5. Open Harmraid app and register your device
+1. 打开 Unraid WebGUI，进入 **Settings > Notification Settings**
+2. 启用推送开关
+3. 选择要推送的通知类型
+4. 打开 Harmraid App，在 **设置 > 通知推送** 中注册设备
 
-## HMS Setup
-
-1. Go to [AppGallery Connect](https://developer.huawei.com/consumer/cn/service/josp/agc/index.html)
-2. Create a project and add a HarmonyOS app
-3. Enable **Push Kit**
-4. Note your **App ID** and **App Secret**
-5. Enter these in the plugin settings page
-
-## How It Works
+## 推送机制
 
 ```
-Unraid Notification → event/notify hook → send-push.sh
-                                            ↓
-                                   HMS Push API
-                                            ↓
-                          HarmonyOS Device ← Push Kit
+Unraid 通知 → event/notify 钩子 → send-push.sh
+                                         ↓
+                                HMS Push API
+                                         ↓
+                          HarmonyOS 设备 ← Push Kit
 ```
 
-The plugin hooks into Unraid's notification system. When a notification matching the configured types is created, the plugin:
-1. Receives the notification via the `event/notify` hook
-2. Gets an HMS OAuth token using your credentials
-3. Sends the push message to all registered devices via HMS Push API
+插件拦截 Unraid 的通知事件，将符合条件的通知转发到 HMS Push API，最终送达您的 HarmonyOS 设备。
 
-## Files
+## 文件说明
 
-| Path | Purpose |
-|------|---------|
-| `/usr/local/emhttp/plugins/harmraid-push/harmraid-push.page` | WebGUI settings page |
-| `/usr/local/emhttp/plugins/harmraid-push/send-push.sh` | Push sending script |
-| `/usr/local/emhttp/plugins/harmraid-push/event/notify` | Notification hook |
-| `/usr/local/emhttp/plugins/harmraid-push/scripts/configure-push` | Config helper |
-| `/boot/config/plugins/harmraid-push/push_enabled.txt` | Push toggle |
-| `/boot/config/plugins/harmraid-push/types.txt` | Notification types |
+| 路径 | 用途 |
+|------|------|
+| `/usr/local/emhttp/plugins/harmraid-push/harmraid-push.page` | WebGUI 设置页面 |
+| `/usr/local/emhttp/plugins/harmraid-push/send-push.sh` | 推送发送脚本 |
+| `/usr/local/emhttp/plugins/harmraid-push/event/notify` | 通知事件钩子 |
+| `/usr/local/emhttp/plugins/harmraid-push/scripts/configure-push` | 配置脚本 |
+| `/boot/config/plugins/harmraid-push/push_enabled.txt` | 推送开关 |
+| `/boot/config/plugins/harmraid-push/types.txt` | 通知类型配置 |
+| `/boot/config/plugins/harmraid-push/push_token.txt` | 设备推送令牌 |
 | `/boot/config/plugins/harmraid-push/app_id.txt` | HMS App ID |
 | `/boot/config/plugins/harmraid-push/app_secret.txt` | HMS App Secret |
-| `/boot/config/plugins/harmraid-push/push_token.txt` | Device push token |
 
-## License
+## 许可证
 
 MIT

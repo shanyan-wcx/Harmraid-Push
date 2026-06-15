@@ -1,9 +1,10 @@
 #!/bin/bash
-# Harmraid Push - Send notification to HarmonyOS device via HMS Push Kit
-# Usage: send-push.sh <title> <content> [severity]
-#   severity: info (default), warning, error, alert
+# Harmraid Push - 发送通知到 HarmonyOS 设备
+# 由 event/notify 钩子调用，无需手动执行
 
 readonly CONFIG_DIR="/boot/config/plugins/harmraid-push"
+readonly PUSH_ENABLED_FILE="${CONFIG_DIR}/push_enabled.txt"
+readonly TYPES_FILE="${CONFIG_DIR}/types.txt"
 readonly TOKEN_FILE="${CONFIG_DIR}/push_token.txt"
 readonly APP_ID_FILE="${CONFIG_DIR}/app_id.txt"
 readonly APP_SECRET_FILE="${CONFIG_DIR}/app_secret.txt"
@@ -12,13 +13,21 @@ TITLE="${1:-Harmraid 通知}"
 CONTENT="${2:-}"
 SEVERITY="${3:-info}"
 
-if [ ! -f "$TOKEN_FILE" ]; then
-  logger -t harmraid-push "No push token found. Device not registered."
-  exit 1
+# 检查推送是否启用
+push_enabled=$(cat "$PUSH_ENABLED_FILE" 2>/dev/null || echo "false")
+if [ "$push_enabled" != "true" ]; then
+  exit 0
 fi
 
-if [ ! -f "$APP_ID_FILE" ] || [ ! -f "$APP_SECRET_FILE" ]; then
-  logger -t harmraid-push "HMS credentials not configured."
+# 检查通知类型是否匹配
+allowed_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,error")
+if ! echo "$allowed_types" | grep -q "$SEVERITY"; then
+  exit 0
+fi
+
+# 检查令牌和凭证
+if [ ! -f "$TOKEN_FILE" ] || [ ! -f "$APP_ID_FILE" ] || [ ! -f "$APP_SECRET_FILE" ]; then
+  logger -t harmraid-push "Push not configured: missing token or credentials"
   exit 1
 fi
 
@@ -26,7 +35,7 @@ TOKEN=$(cat "$TOKEN_FILE")
 APP_ID=$(cat "$APP_ID_FILE")
 APP_SECRET=$(cat "$APP_SECRET_FILE")
 
-# Get HMS OAuth Token
+# 获取 HMS OAuth 令牌
 AUTH_RESPONSE=$(curl -s -X POST \
   "https://oauth-login.cloud.huawei.com/oauth2/v3/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
@@ -35,11 +44,11 @@ AUTH_RESPONSE=$(curl -s -X POST \
 AUTH_TOKEN=$(echo "$AUTH_RESPONSE" | jq -r '.access_token' 2>/dev/null)
 
 if [ -z "$AUTH_TOKEN" ] || [ "$AUTH_TOKEN" = "null" ]; then
-  logger -t harmraid-push "Failed to get HMS OAuth token."
+  logger -t harmraid-push "Failed to get HMS OAuth token"
   exit 1
 fi
 
-# Send push notification
+# 发送推送通知
 curl -s -X POST \
   "https://push-api.cloud.huawei.com/v1/${APP_ID}/messages:send" \
   -H "Authorization: Bearer ${AUTH_TOKEN}" \
@@ -58,4 +67,4 @@ curl -s -X POST \
 EOF
 )"
 
-logger -t harmraid-push "Push sent: ${TITLE}"
+logger -t harmraid-push "Push sent: ${TITLE} (${SEVERITY})"

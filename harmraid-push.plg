@@ -30,12 +30,6 @@
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/config/settings.json">
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/config/settings.json</URL>
   </FILE>
-  <FILE Name="/usr/local/emhttp/plugins/harmraid-push/config/push_enabled.txt">
-    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/config/push_enabled.txt</URL>
-  </FILE>
-  <FILE Name="/usr/local/emhttp/plugins/harmraid-push/config/types.txt">
-    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/config/types.txt</URL>
-  </FILE>
   <INSTALL>
     <!
       chmod +x /usr/local/emhttp/plugins/harmraid-push/send-push.sh
