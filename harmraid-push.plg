@@ -46,6 +46,9 @@
       fi
 
       logger -t harmraid-push "Plugin installed v1.0.0"
+
+      # Clean up old README.md (moved to GitHub repo, no longer bundled)
+      rm -f /usr/local/emhttp/plugins/harmraid-push/README.md
     ]]>
   </INSTALL>
   <REMOVE>
