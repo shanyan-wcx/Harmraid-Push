@@ -94,7 +94,7 @@ for type_name in "alert" "warning" "info"; do
   echo "$push_types" | grep -q "$type_name" && checked="checked"
   label=""
   case "$type_name" in
-    alert) label="告警 (Alert)" ;;
+    alert) label="错误 (Alert)" ;;
     warning) label="警告 (Warning)" ;;
     info) label="普通通知 (Info)" ;;
   esac
