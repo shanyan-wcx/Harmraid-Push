@@ -10,9 +10,6 @@
   <CHANGES>
   </CHANGES>
   <ICON>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/icon.png</ICON>
-  <FILE Name="/usr/local/emhttp/plugins/harmraid-push/README.md">
-    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/README.md</URL>
-  </FILE>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/send-push.sh">
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/send-push.sh</URL>
     <RUN mode="755">chmod +x /usr/local/emhttp/plugins/harmraid-push/send-push.sh</RUN>
@@ -25,7 +22,7 @@
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/scripts/configure-push</URL>
     <RUN mode="755">chmod +x /usr/local/emhttp/plugins/harmraid-push/scripts/configure-push</RUN>
   </FILE>
-  <FILE Name="/usr/local/emhttp/plugins/harmraid-push/webGui/harmraid-push.page">
+  <FILE Name="/usr/local/emhttp/plugins/harmraid-push/harmraid-push.page">
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/webGui/harmraid-push.page</URL>
   </FILE>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/config/settings.json">
