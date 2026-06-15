@@ -54,18 +54,26 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
         cp /usr/local/emhttp/plugins/harmraid-push/config/settings.json /boot/config/plugins/harmraid-push/settings.json
       fi
 
-      logger -t harmraid-push "Plugin installed v1.0.1"
+      logger -t harmraid-push "Plugin installed v1.0.3"
 
       # Clean up files from v1.0.0 (installed in wrong paths)
       rm -f /usr/local/emhttp/plugins/harmraid-push/README.md
       rm -rf /usr/local/emhttp/plugins/harmraid-push/webGui
     ]]>
   </INSTALL>
-  <REMOVE>
-    <![CDATA[
-      rm -rf /boot/config/plugins/harmraid-push
+  <FILE Run="/bin/bash" Method="remove">
+    <INLINE>
+      logger -t harmraid-push "Removing plugin..."
+
+      # Kill any running processes
+      pkill -f "harmraid-push" 2>/dev/null || true
+
+      # Remove all files
       rm -rf /usr/local/emhttp/plugins/harmraid-push
+      rm -rf /boot/config/plugins/harmraid-push
+      rm -f /var/log/plugins/harmraid-push*
+
       logger -t harmraid-push "Plugin removed"
-    ]]>
-  </REMOVE>
+    </INLINE>
+  </FILE>
 </PLUGIN>
