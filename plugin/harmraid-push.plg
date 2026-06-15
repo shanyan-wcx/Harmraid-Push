@@ -2,31 +2,31 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "harmraid-push">
 <!ENTITY author    "shanyan-wcx">
-<!ENTITY version   "1.0.0">
-<!ENTITY pluginURL "https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/&name;.plg">
+<!ENTITY version   "1.0.1">
+<!ENTITY pluginURL "https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/&name;.plg">
 <!ENTITY github    "https://github.com/shanyan-wcx/Harmraid-Push">
 ]>
 <PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" github="&github;" supportURL="&github;" description="A push notification plugin for the Harmraid app.">
   <CHANGES>
   </CHANGES>
-  <ICON>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/icon.png</ICON>
+  <ICON>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/icon.png</ICON>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/send-push.sh">
-    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/send-push.sh</URL>
+    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/send-push.sh</URL>
     <RUN mode="755">chmod +x /usr/local/emhttp/plugins/harmraid-push/send-push.sh</RUN>
   </FILE>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/event/notify">
-    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/event/notify</URL>
+    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/event/notify</URL>
     <RUN mode="755">chmod +x /usr/local/emhttp/plugins/harmraid-push/event/notify</RUN>
   </FILE>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/scripts/configure-push">
-    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/scripts/configure-push</URL>
+    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/scripts/configure-push</URL>
     <RUN mode="755">chmod +x /usr/local/emhttp/plugins/harmraid-push/scripts/configure-push</RUN>
   </FILE>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/harmraid-push.page">
-    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/webGui/harmraid-push.page</URL>
+    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/webGui/harmraid-push.page</URL>
   </FILE>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/config/settings.json">
-    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/config/settings.json</URL>
+    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/config/settings.json</URL>
   </FILE>
   <INSTALL>
     <![CDATA[
@@ -45,9 +45,9 @@
         cp /usr/local/emhttp/plugins/harmraid-push/config/settings.json /boot/config/plugins/harmraid-push/settings.json
       fi
 
-      logger -t harmraid-push "Plugin installed v1.0.0"
+      logger -t harmraid-push "Plugin installed v1.0.1"
 
-      # Clean up old README.md (moved to GitHub repo, no longer bundled)
+      # Clean up old README.md installed by previous versions
       rm -f /usr/local/emhttp/plugins/harmraid-push/README.md
     ]]>
   </INSTALL>
