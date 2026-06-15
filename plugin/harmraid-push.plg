@@ -2,11 +2,11 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "harmraid-push">
 <!ENTITY author    "shanyan-wcx">
-<!ENTITY version   "1.0.1">
+<!ENTITY version   "1.0.3">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/&name;.plg">
 <!ENTITY github    "https://github.com/shanyan-wcx/Harmraid-Push">
 ]>
-<PLUGIN name="Harmraid-Push" author="&author;" version="&version;" launch="Utilities/Harmraid-Push" pluginURL="&pluginURL;" github="&github;" supportURL="&github;" support="https://github.com/shanyan-wcx/Harmraid-Push" description="A push notification plugin for the Harmraid app.">
+<PLUGIN name="Harmraid-Push" author="&author;" version="&version;" launch="Utilities/Harmraid-Push" pluginURL="&pluginURL;" github="&github;" supportURL="&github;" support="https://github.com/shanyan-wcx/Harmraid-Push" description="Harmraid 应用的 Unraid 推送通知插件。">
   <CHANGES>
   </CHANGES>
   <ICON>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/icon.png</ICON>
@@ -15,6 +15,9 @@
 set -e
 rm -rf /usr/local/emhttp/plugins/harmraid-push
     </INLINE>
+  </FILE>
+  <FILE Name="/usr/local/emhttp/plugins/harmraid-push/icon.png">
+    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/icon.png</URL>
   </FILE>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/send-push.sh">
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/send-push.sh</URL>

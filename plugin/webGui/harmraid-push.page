@@ -31,12 +31,12 @@ if ($_GET['format'] === 'json') {
 ?>
 <link rel="stylesheet" href="/webGui/styles/default.css">
 <div style="display:flex;align-items:center;justify-content:space-between;">
-  <h1>Harmraid-Push</h1>
-  <a href="https://github.com/shanyan-wcx/Harmraid-Push" target="_blank" style="background:#24292e;color:white;padding:4px 10px;border-radius:4px;text-decoration:none;font-size:12px;">GitHub</a>
+  <h1>Harmraid-Push <a href="https://github.com/shanyan-wcx/Harmraid-Push" target="_blank" style="background:#24292e;color:white;padding:2px 8px;border-radius:4px;text-decoration:none;font-size:11px;vertical-align:middle;margin-left:8px;">GitHub</a></h1>
 </div>
-<p>A push notification plugin for the Harmraid app.</p>
+<p>Harmraid 应用的 Unraid 推送通知插件。</p>
 <hr>
 <form method="GET">
+<input type="hidden" name="action" value="save">
 <h3>推送状态</h3>
 <label><input type="checkbox" name="push_enabled" value="true" <?=$pushEnabled === 'true' ? 'checked' : ''?>> 启用推送通知</label><br><br>
 <h3>通知类型</h3>
