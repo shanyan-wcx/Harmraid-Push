@@ -47,8 +47,9 @@
 
       logger -t harmraid-push "Plugin installed v1.0.1"
 
-      # Clean up old README.md installed by previous versions
+      # Clean up files from v1.0.0 (installed in wrong paths)
       rm -f /usr/local/emhttp/plugins/harmraid-push/README.md
+      rm -rf /usr/local/emhttp/plugins/harmraid-push/webGui
     ]]>
   </INSTALL>
   <REMOVE>
