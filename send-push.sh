@@ -20,7 +20,7 @@ if [ "$push_enabled" != "true" ]; then
 fi
 
 # 检查通知类型是否匹配
-allowed_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,error")
+allowed_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,info")
 if ! echo "$allowed_types" | grep -q "$SEVERITY"; then
   exit 0
 fi

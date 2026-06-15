@@ -26,7 +26,7 @@ fi
 # JSON API - 供 Harmraid App 调用
 if echo "${QUERY_STRING}" | grep -q "format=json"; then
   push_enabled=$(cat "$PUSH_ENABLED_FILE" 2>/dev/null || echo "false")
-  push_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,error")
+  push_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,info")
   token=$(cat "$TOKEN_FILE" 2>/dev/null || echo "")
   has_credentials="false"
   [ -n "$token" ] && has_credentials="true"
@@ -65,7 +65,7 @@ fi
 
 # 读取当前配置
 push_enabled=$(cat "$PUSH_ENABLED_FILE" 2>/dev/null || echo "false")
-push_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,error")
+push_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,info")
 token=$(cat "$TOKEN_FILE" 2>/dev/null || echo "")
 token_display="${token:0:16}..."
 [ -z "$token" ] && token_display="未注册"
@@ -89,14 +89,13 @@ echo "<br><br>"
 
 echo "<h3>通知类型</h3>"
 echo "<p>选择需要推送的通知类型：</p>"
-for type_name in "alert" "warning" "error" "info"; do
+for type_name in "alert" "warning" "info"; do
   checked=""
   echo "$push_types" | grep -q "$type_name" && checked="checked"
   label=""
   case "$type_name" in
     alert) label="告警 (Alert)" ;;
     warning) label="警告 (Warning)" ;;
-    error) label="错误 (Error)" ;;
     info) label="普通通知 (Info)" ;;
   esac
   echo "<label><input type='checkbox' name='push_types' value='${type_name}' ${checked}> ${label}</label><br>"

@@ -12,7 +12,7 @@ ACTION="${1:-status}"
 case "$ACTION" in
   status)
     push_enabled=$(cat "$PUSH_ENABLED_FILE" 2>/dev/null || echo "false")
-    push_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,error")
+    push_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,info")
     echo '{"pushEnabled":'${push_enabled}',"pushTypes":"'${push_types}'"}'
     ;;
   enable)

@@ -1,1 +1,1 @@
-alert,warning,error
+alert,warning,info

@@ -7,23 +7,23 @@
 ## 功能
 
 - 实时推送 Unraid 通知到手机
-- 可配置通知类型（告警、警告、错误、普通通知）
+- 可配置通知类型（告警 / 警告 / 普通通知）
 - 在 Unraid WebGUI 中启停推送
 - 无需应用常驻后台（系统级推送）
 
 ## 要求
 
 - Unraid 6.12+
-- 已安装 [Harmraid](https://github.com/shanyan-wcx/Harmraid) 应用的 HarmonyOS 设备（API 24+）
+- 已安装 [Harmraid](https://github.com/shanyan-wcx/Harmraid) 应用的 HarmonyOS 设备（API 23+ / HarmonyOS 6.1.0+）
 
 ## 安装
 
-### 通过 Community Apps（推荐）
+### 推荐：在 Harmraid App 内安装
 
-1. 打开 Unraid WebGUI
-2. 进入 **Apps** 页面
-3. 搜索 **Harmraid Push**
-4. 点击 **Install**
+1. 打开 Harmraid App
+2. 进入 **设置 > 通知推送**
+3. 点击 **安装推送插件**
+4. 等待安装完成
 
 ### 手动安装
 
@@ -72,6 +72,10 @@ Unraid 通知 → event/notify 钩子 → send-push.sh
 | `/boot/config/plugins/harmraid-push/app_id.txt` | HMS App ID |
 | `/boot/config/plugins/harmraid-push/app_secret.txt` | HMS App Secret |
 
+## 构建
+
+本插件使用标准的 Unraid 插件格式（`.plg`），由 XML 定义文件和 shell 脚本组成，无需编译。
+
 ## 许可证
 
-MIT
+[MIT](LICENSE)
