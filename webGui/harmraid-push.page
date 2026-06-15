@@ -72,8 +72,8 @@ token_display="${token:0:16}..."
 [ -z "$token" ] && token_display="未注册"
 
 # 渲染配置页面（不加外层 HTML 结构，Unraid 自动布局）
-echo "<h1>Harmraid 推送通知</h1>"
-echo "<p>将 Unraid 通知推送到您的 Harmraid App。</p>"
+echo "<h1>Harmraid Push</h1>"
+echo "<p>A push notification plugin for the Harmraid app.</p>"
 echo "<hr>"
 
 echo "<form method='GET' action='/plugins/harmraid-push/harmraid-push.page'>"
