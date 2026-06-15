@@ -1,7 +1,9 @@
+Menu="Settings"
+Icon="/plugins/harmraid-push/icon.png"
+Title="Harmraid Push"
+---
 #!/bin/bash
 # Harmraid Push - Unraid WebGUI 配置页面
-# 通过 Unraid 的 emhttp 网页服务器加载
-# 注意：Unraid 会自动包裹布局，不需要输出 DOCTYPE/html/head/body
 
 source /usr/local/emhttp/plugins/dynamix/include/Wrappers.php
 
