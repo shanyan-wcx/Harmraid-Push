@@ -31,7 +31,7 @@
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/config/settings.json</URL>
   </FILE>
   <INSTALL>
-    <!
+    <![CDATA[
       chmod +x /usr/local/emhttp/plugins/harmraid-push/send-push.sh
       chmod +x /usr/local/emhttp/plugins/harmraid-push/event/notify
       chmod +x /usr/local/emhttp/plugins/harmraid-push/scripts/configure-push
@@ -41,20 +41,20 @@
         echo "true" > /boot/config/plugins/harmraid-push/push_enabled.txt
       fi
       if [ ! -f /boot/config/plugins/harmraid-push/types.txt ]; then
-        echo "alert,warning,error" > /boot/config/plugins/harmraid-push/types.txt
+        echo "alert,warning,info" > /boot/config/plugins/harmraid-push/types.txt
       fi
       if [ ! -f /boot/config/plugins/harmraid-push/settings.json ]; then
         cp /usr/local/emhttp/plugins/harmraid-push/config/settings.json /boot/config/plugins/harmraid-push/settings.json
       fi
 
       logger -t harmraid-push "Plugin installed v1.0.0"
-    !>
+    ]]>
   </INSTALL>
   <REMOVE>
-    <!
+    <![CDATA[
       rm -rf /boot/config/plugins/harmraid-push
       rm -rf /usr/local/emhttp/plugins/harmraid-push
       logger -t harmraid-push "Plugin removed"
-    !>
+    ]]>
   </REMOVE>
 </PLUGIN>
