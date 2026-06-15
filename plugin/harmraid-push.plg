@@ -6,7 +6,7 @@
 <!ENTITY pluginURL "https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/&name;.plg">
 <!ENTITY github    "https://github.com/shanyan-wcx/Harmraid-Push">
 ]>
-<PLUGIN name="&name;" author="&author;" version="&version;" launch="Settings/HarmraidPush" pluginURL="&pluginURL;" github="&github;" supportURL="&github;" description="A push notification plugin for the Harmraid app.">
+<PLUGIN name="Harmraid-Push" author="&author;" version="&version;" launch="Utilities/Harmraid-Push" pluginURL="&pluginURL;" github="&github;" supportURL="&github;" support="https://github.com/shanyan-wcx/Harmraid-Push" description="A push notification plugin for the Harmraid app.">
   <CHANGES>
   </CHANGES>
   <ICON>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/icon.png</ICON>

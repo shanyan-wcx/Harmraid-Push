@@ -1,107 +1,49 @@
-Menu="Settings"
+Menu="Utilities"
 Icon="/plugins/harmraid-push/icon.png"
-Title="Harmraid Push"
+Title="Harmraid-Push"
 ---
-#!/bin/bash
-# Harmraid Push - Unraid WebGUI 配置页面
+<?php
+$configDir = '/boot/config/plugins/harmraid-push';
+$pushEnabled = trim(@file_get_contents("$configDir/push_enabled.txt")) ?: 'false';
+$pushTypes = trim(@file_get_contents("$configDir/types.txt")) ?: 'alert,warning,info';
+$token = trim(@file_get_contents("$configDir/push_token.txt")) ?: '';
+$tokenDisplay = $token ? substr($token, 0, 16) . '...' : '未注册';
 
-source /usr/local/emhttp/plugins/dynamix/include/Wrappers.php
-
-CONFIG_DIR="/boot/config/plugins/harmraid-push"
-PUSH_ENABLED_FILE="${CONFIG_DIR}/push_enabled.txt"
-TYPES_FILE="${CONFIG_DIR}/types.txt"
-TOKEN_FILE="${CONFIG_DIR}/push_token.txt"
-SETTINGS_FILE="${CONFIG_DIR}/settings.json"
-
-# 处理表单提交
-if echo "${QUERY_STRING}" | grep -q "action=save"; then
-  push_enabled=$(echo "${QUERY_STRING}" | sed -n 's/.*push_enabled=//p' | cut -d'&' -f1 | sed 's/%20/ /g')
-  push_types=$(echo "${QUERY_STRING}" | sed -n 's/.*push_types=//p' | cut -d'&' -f1 | sed 's/%20/ /g')
-
-  [ -n "$push_enabled" ] && echo "$push_enabled" > "$PUSH_ENABLED_FILE"
-  [ -n "$push_types" ] && echo "$push_types" > "$TYPES_FILE"
-
-  logger -t harmraid-push "Settings saved: enabled=$push_enabled, types=$push_types"
-  echo "Settings saved"
-  exit 0
-fi
-
-# JSON API - 供 Harmraid App 调用
-if echo "${QUERY_STRING}" | grep -q "format=json"; then
-  push_enabled=$(cat "$PUSH_ENABLED_FILE" 2>/dev/null || echo "false")
-  push_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,info")
-  token=$(cat "$TOKEN_FILE" 2>/dev/null || echo "")
-  has_credentials="false"
-  [ -n "$token" ] && has_credentials="true"
-  version="1.0.0"
-
-  cat << EOFJSON
-{
-  "installed": true,
-  "version": "${version}",
-  "pushEnabled": ${push_enabled},
-  "pushTypes": "${push_types}",
-  "hasCredentials": ${has_credentials},
-  "configStatus": "configured"
+if ($_GET['action'] === 'save') {
+  file_put_contents("$configDir/push_enabled.txt", $_GET['push_enabled'] ?? 'false');
+  file_put_contents("$configDir/types.txt", $_GET['push_types'] ?? 'alert,warning,info');
+  echo "Settings saved";
+  exit;
 }
-EOFJSON
-  exit 0
-fi
 
-# 设备注册 API - 供 Harmraid App 调用
-if echo "${QUERY_STRING}" | grep -q "action=register"; then
-  token=$(echo "${QUERY_STRING}" | sed -n 's/.*token=//p' | cut -d'&' -f1)
-  app_id=$(echo "${QUERY_STRING}" | sed -n 's/.*app_id=//p' | cut -d'&' -f1)
-  app_secret=$(echo "${QUERY_STRING}" | sed -n 's/.*app_secret=//p' | cut -d'&' -f1)
-
-  if [ -n "$token" ]; then
-    echo "$token" > "$TOKEN_FILE"
-    [ -n "$app_id" ] && echo "$app_id" > "${CONFIG_DIR}/app_id.txt"
-    [ -n "$app_secret" ] && echo "$app_secret" > "${CONFIG_DIR}/app_secret.txt"
-    logger -t harmraid-push "Device registered: token=${token:0:16}..."
-    echo '{"status":"ok"}'
-  else
-    echo '{"status":"error","message":"Missing token"}'
-  fi
-  exit 0
-fi
-
-# 读取当前配置
-push_enabled=$(cat "$PUSH_ENABLED_FILE" 2>/dev/null || echo "false")
-push_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,info")
-token=$(cat "$TOKEN_FILE" 2>/dev/null || echo "")
-token_display="${token:0:16}..."
-[ -z "$token" ] && token_display="未注册"
-
-# 渲染配置页面（不加外层 HTML 结构，Unraid 自动布局）
-echo "<h1>Harmraid Push</h1>"
-echo "<p>A push notification plugin for the Harmraid app.</p>"
-echo "<hr>"
-
-echo "<form method='GET' action='/plugins/harmraid-push/harmraid-push.page'>"
-echo "<input type='hidden' name='action' value='save'>"
-
-echo "<h3>推送状态</h3>"
-echo "<label><input type='checkbox' name='push_enabled' value='true' $( [ "$push_enabled" = "true" ] && echo "checked")> 启用推送通知</label>"
-echo "<br><br>"
-
-echo "<h3>通知类型</h3>"
-echo "<p>选择需要推送的通知类型：</p>"
-for type_name in "alert" "warning" "info"; do
-  checked=""
-  echo "$push_types" | grep -q "$type_name" && checked="checked"
-  label=""
-  case "$type_name" in
-    alert) label="错误 (Alert)" ;;
-    warning) label="警告 (Warning)" ;;
-    info) label="普通通知 (Info)" ;;
-  esac
-  echo "<label><input type='checkbox' name='push_types' value='${type_name}' ${checked}> ${label}</label><br>"
-done
-echo "<br>"
-
-echo "<h3>设备状态</h3>"
-echo "<p>推送令牌: ${token_display}</p>"
-
-echo "<br><input type='submit' value='保存设置' class='button'>"
-echo "</form>"
+if ($_GET['format'] === 'json') {
+  header('Content-Type: application/json');
+  echo json_encode([
+    'installed' => true,
+    'version' => '1.0.3',
+    'pushEnabled' => $pushEnabled === 'true',
+    'pushTypes' => $pushTypes,
+    'hasCredentials' => $token !== '',
+    'configStatus' => 'configured'
+  ]);
+  exit;
+}
+?>
+<link rel="stylesheet" href="/webGui/styles/default.css">
+<div style="display:flex;align-items:center;justify-content:space-between;">
+  <h1>Harmraid-Push</h1>
+  <a href="https://github.com/shanyan-wcx/Harmraid-Push" target="_blank" style="background:#24292e;color:white;padding:4px 10px;border-radius:4px;text-decoration:none;font-size:12px;">GitHub</a>
+</div>
+<p>A push notification plugin for the Harmraid app.</p>
+<hr>
+<form method="GET">
+<h3>推送状态</h3>
+<label><input type="checkbox" name="push_enabled" value="true" <?=$pushEnabled === 'true' ? 'checked' : ''?>> 启用推送通知</label><br><br>
+<h3>通知类型</h3>
+<?php foreach (['alert' => '错误 (Alert)', 'warning' => '警告 (Warning)', 'info' => '普通通知 (Info)'] as $k => $v): ?>
+<label><input type="checkbox" name="push_types" value="<?=$k?>" <?=strpos($pushTypes, $k) !== false ? 'checked' : ''?>> <?=$v?></label><br>
+<?php endforeach; ?><br>
+<h3>设备状态</h3>
+<p>推送令牌: <?=$tokenDisplay?></p><br>
+<input type="submit" value="保存设置" class="button">
+</form>
