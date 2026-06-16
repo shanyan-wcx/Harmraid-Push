@@ -48,25 +48,6 @@ if ($_REQUEST['cmd'] === 'save') {
   $pushTypes = trim(@file_get_contents("$configDir/types.txt")) ?: 'alert,warning,info';
   $saved = true;
 }
-
-if ($_GET['cmd'] === 'test_push') {
-  header('Content-Type: text/plain; charset=utf-8');
-  $devicesJson = @file_get_contents("$configDir/devices.json");
-  $devices = $devicesJson ? json_decode($devicesJson, true) : [];
-  if (count($devices) === 0) {
-    echo "无设备已注册，无法发送测试通知\n";
-    exit;
-  }
-  $output = [];
-  exec('/usr/local/emhttp/plugins/harmraid-push/send-push.sh "测试通知" "这是一条来自 Harmraid Push 的测试通知" "info" 2>&1', $output, $code);
-  echo implode("\n", $output) . "\n";
-  if ($code === 0) {
-    echo "测试通知发送完成\n";
-  } else {
-    echo "发送失败（退出码: $code）\n";
-  }
-  exit;
-}
 ?>
 <link rel="stylesheet" href="/webGui/styles/default.css">
 <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -119,7 +100,7 @@ echo count($devices);
   <td style="padding:6px 4px;white-space:nowrap;">
     <span class="token-wrap" data-token="<?=htmlspecialchars($d['token'])?>" data-prefix="<?=htmlspecialchars(substr($d['token'],0,8))?>"
           style="font-size:11px;color:#666;font-family:monospace;">
-      <?=htmlspecialchars(substr($d['token'],0,8))?>
+      <?=htmlspecialchars(substr($d['token'],0,8)) . str_repeat('*', max(0, strlen($d['token']) - 8))?>
     </span>
     <button onclick="toggleToken(this)" style="background:none;border:none;cursor:pointer;font-size:14px;vertical-align:middle;">👁️‍🗨️</button>
   </td>
@@ -163,7 +144,7 @@ function sendTestPush() {
   log.style.display = 'block';
   log.textContent = '发送中...\n';
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', '?cmd=test_push');
+  xhr.open('GET', '/plugins/harmraid-push/api.php?cmd=test_push');
   xhr.onload = function() {
     if (xhr.status === 200) {
       log.textContent = xhr.responseText;

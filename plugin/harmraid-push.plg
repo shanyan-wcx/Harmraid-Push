@@ -31,6 +31,9 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/event/notify</URL>
     <RUN mode="755">chmod +x /usr/local/emhttp/plugins/harmraid-push/event/notify</RUN>
   </FILE>
+  <FILE Name="/usr/local/emhttp/plugins/harmraid-push/api.php">
+    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/api.php</URL>
+  </FILE>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/scripts/configure-push">
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/scripts/configure-push</URL>
     <RUN mode="755">chmod +x /usr/local/emhttp/plugins/harmraid-push/scripts/configure-push</RUN>
@@ -64,6 +67,8 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
       rm -f /usr/local/emhttp/plugins/harmraid-push/README.md
       rm -rf /usr/local/emhttp/plugins/harmraid-push/webGui
       rm -f /usr/local/emhttp/plugins/harmraid-push/register.php
+      # Ensure scripts are executable
+      chmod +x /usr/local/emhttp/plugins/harmraid-push/send-push.sh 2>/dev/null || true
     ]]>
   </INSTALL>
   <FILE Run="/bin/bash" Method="remove">
