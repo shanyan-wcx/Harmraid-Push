@@ -6,6 +6,9 @@ TITLE="${NOTIFICATION_SUBJECT:-$1}"
 CONTENT="${NOTIFICATION_DESCRIPTION:-$2}"
 SEVERITY="${NOTIFICATION_SEVERITY:-info}"
 
+# Ensure push script is executable
+chmod +x /usr/local/emhttp/plugins/harmraid-push/send-push.sh 2>/dev/null || true
+
 # Forward to push script
 /usr/local/emhttp/plugins/harmraid-push/send-push.sh \
   "$TITLE" "$CONTENT" "$SEVERITY"
