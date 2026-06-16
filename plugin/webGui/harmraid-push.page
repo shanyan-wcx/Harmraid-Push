@@ -6,8 +6,25 @@ Title="Harmraid-Push"
 $configDir = '/boot/config/plugins/harmraid-push';
 $pushEnabled = trim(@file_get_contents("$configDir/push_enabled.txt")) ?: 'false';
 $pushTypes = trim(@file_get_contents("$configDir/types.txt")) ?: 'alert,warning,info';
-$token = trim(@file_get_contents("$configDir/push_token.txt")) ?: '';
-$tokenDisplay = $token ? substr($token, 0, 16) . '...' : '未注册';
+$tokenLines = array_filter(file("$configDir/push_token.txt", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: []);
+$latestToken = end($tokenLines) ?: '';
+$tokenDisplay = $latestToken ? substr($latestToken, 0, 16) . '...' : '未注册';
+$deviceCount = count($tokenLines);
+
+if ($_GET['action'] === 'register') {
+  $t = $_GET['token'] ?? '';
+  $clientId = $_GET['client_id'] ?? '';
+  $clientSecret = $_GET['client_secret'] ?? '';
+  if ($t) {
+    file_put_contents("$configDir/push_token.txt", $t . "\n", FILE_APPEND | LOCK_EX);
+    if ($clientId) { file_put_contents("$configDir/client_id.txt", $clientId); }
+    if ($clientSecret) { file_put_contents("$configDir/client_secret.txt", $clientSecret); }
+    echo '{"status":"ok"}';
+  } else {
+    echo '{"status":"error","message":"Missing token"}';
+  }
+  exit;
+}
 
 if ($_GET['action'] === 'save') {
   if (!is_dir($configDir)) {
@@ -40,8 +57,9 @@ if ($_GET['format'] === 'json') {
     'version' => '1.0.4',
     'pushEnabled' => $pushEnabled === 'true',
     'pushTypes' => $pushTypes,
-    'hasCredentials' => $token !== '',
-    'configStatus' => 'configured'
+    'hasCredentials' => $deviceCount > 0,
+    'configStatus' => 'configured',
+    'deviceCount' => $deviceCount
   ]);
   exit;
 }
@@ -62,7 +80,8 @@ if ($_GET['format'] === 'json') {
 <label><input type="checkbox" name="type_<?=$k?>" value="<?=$k?>" <?=strpos($pushTypes, $k) !== false ? 'checked' : ''?>> <?=$v?></label><br>
 <?php endforeach; ?><br>
 <h3>设备状态</h3>
-<p>推送令牌: <?=$tokenDisplay?></p><br>
+<p>已注册设备: <?=$deviceCount?> 台</p>
+<p>最新推送令牌: <?=$tokenDisplay?></p><br>
 <input type="submit" value="保存设置" class="button">
 <?php if (isset($saved) && $saved): ?>
 <p style="color:#27ae60;margin-top:8px;">✅ 已保存</p>

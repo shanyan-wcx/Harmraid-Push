@@ -6,8 +6,8 @@ readonly CONFIG_DIR="/boot/config/plugins/harmraid-push"
 readonly PUSH_ENABLED_FILE="${CONFIG_DIR}/push_enabled.txt"
 readonly TYPES_FILE="${CONFIG_DIR}/types.txt"
 readonly TOKEN_FILE="${CONFIG_DIR}/push_token.txt"
-readonly APP_ID_FILE="${CONFIG_DIR}/app_id.txt"
-readonly APP_SECRET_FILE="${CONFIG_DIR}/app_secret.txt"
+readonly APP_ID_FILE="${CONFIG_DIR}/client_id.txt"
+readonly APP_SECRET_FILE="${CONFIG_DIR}/client_secret.txt"
 
 TITLE="${1:-Harmraid 通知}"
 CONTENT="${2:-}"
@@ -48,12 +48,17 @@ if [ -z "$AUTH_TOKEN" ] || [ "$AUTH_TOKEN" = "null" ]; then
   exit 1
 fi
 
-# 发送推送通知
-curl -s -X POST \
-  "https://push-api.cloud.huawei.com/v1/${APP_ID}/messages:send" \
-  -H "Authorization: Bearer ${AUTH_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "$(cat <<EOF
+# 遍历所有 token 逐条发送
+while IFS= read -r token_line; do
+  [ -z "$token_line" ] && continue
+  TOKEN=$(echo "$token_line" | tr -d '[:space:]')
+  [ -z "$TOKEN" ] && continue
+
+  curl -s -X POST \
+    "https://push-api.cloud.huawei.com/v1/${APP_ID}/messages:send" \
+    -H "Authorization: Bearer ${AUTH_TOKEN}" \
+    -H "Content-Type: application/json" \
+    -d "$(cat <<EOF
 {
   "message": {
     "token": ["${TOKEN}"],
@@ -66,5 +71,4 @@ curl -s -X POST \
 }
 EOF
 )"
-
-logger -t harmraid-push "Push sent: ${TITLE} (${SEVERITY})"
+done < "$TOKEN_FILE"

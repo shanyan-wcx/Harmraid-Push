@@ -69,8 +69,9 @@ Unraid 通知 → event/notify 钩子 → send-push.sh
 | `/boot/config/plugins/harmraid-push/push_enabled.txt` | 推送开关 |
 | `/boot/config/plugins/harmraid-push/types.txt` | 通知类型配置 |
 | `/boot/config/plugins/harmraid-push/push_token.txt` | 设备推送令牌 |
-| `/boot/config/plugins/harmraid-push/app_id.txt` | HMS App ID |
-| `/boot/config/plugins/harmraid-push/app_secret.txt` | HMS App Secret |
+| `/boot/config/plugins/harmraid-push/client_id.txt` | HMS Client ID |
+| `/boot/config/plugins/harmraid-push/client_secret.txt` | HMS Client Secret |
+| `/boot/config/plugins/harmraid-push/push_token.txt` | 设备推送令牌（每行一个） |
 
 ## 构建
 
