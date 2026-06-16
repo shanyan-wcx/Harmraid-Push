@@ -32,7 +32,9 @@ if ($_GET['cmd'] === 'add_device') {
   $devices[] = ['token' => $token, 'device_name' => $deviceName];
   file_put_contents("$configDir/devices.json", json_encode($devices));
   usleep(50000);
-  exec('/usr/local/emhttp/plugins/harmraid-push/send-push.sh "设备注册成功" "设备 ' . $deviceName . ' 已注册" "INFO" 2>&1', $pushOut, $pushCode);
+  $pushScript = '/usr/local/emhttp/plugins/harmraid-push/send-push.sh';
+  @chmod($pushScript, 0755);
+  exec($pushScript . ' "设备注册成功" "设备 ' . $deviceName . ' 已注册" "INFO" 2>&1', $pushOut, $pushCode);
   file_put_contents("$configDir/add_device.log", json_encode(['time' => time(), 'code' => $pushCode, 'output' => $pushOut]));
   echo json_encode(['status' => 'ok', 'push_code' => $pushCode]);
   exit;
