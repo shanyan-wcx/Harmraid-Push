@@ -31,8 +31,7 @@ if ($_GET['cmd'] === 'add_device') {
   if ($devicesJson) { $devices = json_decode($devicesJson, true) ?? []; }
   $devices[] = ['token' => $token, 'device_name' => $deviceName];
   file_put_contents("$configDir/devices.json", json_encode($devices));
-  $allTokens = array_map(fn($d) => $d['token'], $devices);
-  file_put_contents("$configDir/push_token.txt", implode("\n", $allTokens) . "\n");
+  usleep(50000);
   exec('/usr/local/emhttp/plugins/harmraid-push/send-push.sh "设备注册成功" "设备 ' . $deviceName . ' 已注册" "INFO" >/dev/null 2>&1');
   echo json_encode(['status' => 'ok']);
   exit;
@@ -45,8 +44,6 @@ if ($_GET['cmd'] === 'delete_idx') {
   if ($delIdx >= 0 && $delIdx < count($devices)) {
     array_splice($devices, $delIdx, 1);
     file_put_contents("$configDir/devices.json", json_encode($devices));
-    $allTokens = array_map(fn($d) => $d['token'], $devices);
-    file_put_contents("$configDir/push_token.txt", implode("\n", $allTokens) . "\n");
   }
   echo json_encode(['status' => 'ok']);
   exit;

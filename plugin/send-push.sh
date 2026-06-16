@@ -3,7 +3,6 @@
 # 由 event/notify 钩子调用
 
 readonly CONFIG_DIR="/boot/config/plugins/harmraid-push"
-readonly TOKEN_FILE="${CONFIG_DIR}/push_token.txt"
 readonly SA_FILE="${CONFIG_DIR}/service-account.json"
 readonly SA_ENC_FILE="${CONFIG_DIR}/service-account.json.enc"
 readonly TMPKEY="/tmp/harmraid-push-key.pem"
@@ -29,16 +28,19 @@ else
   logger -t harmraid-push "No service account key"
   exit 1
 fi
-[ ! -f "$TOKEN_FILE" ] && exit 0
+[ ! -f "$CONFIG_DIR/devices.json" ] && exit 0
 
 # 解析服务账号密钥
 PROJECT_ID=$(echo "$SA_JSON" | jq -r '.project_id')
 KEY_ID=$(echo "$SA_JSON" | jq -r '.key_id')
 PRIVATE_KEY=$(echo "$SA_JSON" | jq -r '.private_key')
 SUB_ACCOUNT=$(echo "$SA_JSON" | jq -r '.sub_account')
-TOKEN_URI=$(echo "$SA_JSON" | jq -r '.token_uri')
 
 [ -z "$PROJECT_ID" ] && logger -t harmraid-push "Invalid service-account.json" && exit 1
+
+# 从 devices.json 读取所有推送 token
+TOKENS=$(jq '[.[].token]' "$CONFIG_DIR/devices.json" 2>/dev/null)
+[ -z "$TOKENS" ] || [ "$TOKENS" = "[]" ] && exit 0
 
 # 生成 JWT
 NOW=$(date +%s)
@@ -55,10 +57,6 @@ SIGN=$(echo -n "${B64_H}.${B64_P}" | openssl dgst -sha256 -sign "$TMPKEY" | open
 rm -f "$TMPKEY"
 
 JWT="${B64_H}.${B64_P}.${SIGN}"
-
-# 读取所有推送 token（去空行、去重）
-TOKENS=$(jq -R -s '[split("\n")[] | select(length > 0)] | unique' "$TOKEN_FILE" 2>/dev/null)
-[ -z "$TOKENS" ] || [ "$TOKENS" = "[]" ] && exit 0
 
 # V3 批量发送推送
 PAYLOAD_FILE="/tmp/harmraid-push-payload.json"
