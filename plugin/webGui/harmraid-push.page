@@ -81,3 +81,24 @@ if ($_GET['format'] === 'json') {
 <p style="color:#27ae60;margin-top:8px;">✅ 已保存</p>
 <?php endif; ?>
 </form>
+
+<hr style="margin-top:32px;">
+<h3>调试日志</h3>
+<p style="font-size:12px;color:#888;">最后 50 行 — <a href="?action=clear_log" style="color:#c00;" onclick="return confirm('确认清空日志？')">清空日志</a></p>
+<?php
+$logFile = '/var/log/harmraid-push.log';
+if ($_GET['action'] === 'clear_log') {
+  @file_put_contents($logFile, '');
+  echo '<p style="color:#27ae60;">日志已清空</p>';
+}
+$logContent = @file_get_contents($logFile);
+if ($logContent) {
+  $lines = explode("\n", trim($logContent));
+  $lastLines = array_slice($lines, -50);
+  echo '<pre style="max-height:400px;overflow:auto;font-size:11px;background:#1e1e1e;color:#d4d4d4;padding:10px;border-radius:6px;line-height:1.5;font-family:monospace;">';
+  echo htmlspecialchars(implode("\n", $lastLines));
+  echo '</pre>';
+} else {
+  echo '<p style="color:#888;">暂无日志</p>';
+}
+?>

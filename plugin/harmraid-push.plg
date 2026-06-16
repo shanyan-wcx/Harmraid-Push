@@ -66,28 +66,45 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
       rm -f /usr/local/emhttp/plugins/harmraid-push/register.php
 
       # Background poll for device registration notification (60s max)
+      LOG="/var/log/harmraid-push.log"
       (
+        echo "[$(date)] [poll] Background poll started" >> "$LOG"
         for i in $(seq 1 60); do
           sleep 1
           RESULT=$(curl -s http://localhost/graphql \
             -H "Content-Type: application/json" \
             -d '{"query":"{ notifications { list(filter: { type: UNREAD, offset: 0, limit: 50 }) { id subject description importance } } }"}')
+          echo "[$(date)] [poll] attempt $i: $RESULT" >> "$LOG"
+          ERRORS=$(echo "$RESULT" | jq -r '.errors // empty')
+          [ -n "$ERRORS" ] && echo "[$(date)] [poll] GraphQL errors: $ERRORS" >> "$LOG"
+          NOTIF_COUNT=$(echo "$RESULT" | jq '.data.notifications.list | length // 0')
+          echo "[$(date)] [poll] notifications count: $NOTIF_COUNT" >> "$LOG"
           REG_ID=$(echo "$RESULT" | jq -r '.data.notifications.list[] | select(.subject == "HARMRAID_PUSH_REGISTER") | .id' | head -1)
-          [ -z "$REG_ID" ] && continue
-          DESC=$(echo "$RESULT" | jq -r ".data.notifications.list[] | select(.id == \"$REG_ID\") | .description")
-          TOKEN=$(echo "$DESC" | jq -r '.token // empty')
-          DEVICE=$(echo "$DESC" | jq -r '.device_name // empty')
-          [ -z "$TOKEN" ] && continue
-          mkdir -p /boot/config/plugins/harmraid-push
-          echo "$TOKEN" >> /boot/config/plugins/harmraid-push/push_token.txt
-          DEVICES=$(cat /boot/config/plugins/harmraid-push/devices.json 2>/dev/null || echo "[]")
-          echo "$DEVICES" | jq --arg t "$TOKEN" --arg n "${DEVICE:-未知设备}" '. + [{"token": $t, "device_name": $n}]' > /boot/config/plugins/harmraid-push/devices.json
-          curl -s http://localhost/graphql -H "Content-Type: application/json" \
-            -d '{"query":"mutation { archiveNotification(id: \"'"$REG_ID"'\") { id } }"}' >/dev/null
-          /usr/local/emhttp/plugins/harmraid-push/send-push.sh "推送注册成功" "设备已注册" "info" >/dev/null 2>&1
-          logger -t harmraid-push "Device registered: $TOKEN"
-          break
+          if [ -n "$REG_ID" ]; then
+            echo "[$(date)] [poll] Found HARMRAID_PUSH_REGISTER id=$REG_ID" >> "$LOG"
+            DESC=$(echo "$RESULT" | jq -r ".data.notifications.list[] | select(.id == \"$REG_ID\") | .description")
+            echo "[$(date)] [poll] description: $DESC" >> "$LOG"
+            TOKEN=$(echo "$DESC" | jq -r '.token // empty')
+            DEVICE=$(echo "$DESC" | jq -r '.device_name // empty')
+            echo "[$(date)] [poll] token=${TOKEN:0:16}... device=$DEVICE" >> "$LOG"
+            [ -z "$TOKEN" ] && echo "[$(date)] [poll] token empty, skip" >> "$LOG" && continue
+            mkdir -p /boot/config/plugins/harmraid-push
+            echo "$TOKEN" >> /boot/config/plugins/harmraid-push/push_token.txt
+            echo "[$(date)] [poll] token appended to push_token.txt" >> "$LOG"
+            DEVICES=$(cat /boot/config/plugins/harmraid-push/devices.json 2>/dev/null || echo "[]")
+            echo "$DEVICES" | jq --arg t "$TOKEN" --arg n "${DEVICE:-未知设备}" '. + [{"token": $t, "device_name": $n}]' > /boot/config/plugins/harmraid-push/devices.json
+            echo "[$(date)] [poll] devices.json updated" >> "$LOG"
+            ARCHIVE=$(curl -s http://localhost/graphql -H "Content-Type: application/json" \
+              -d '{"query":"mutation { archiveNotification(id: \"'"$REG_ID"'\") { id } }"}')
+            echo "[$(date)] [poll] archive result: $ARCHIVE" >> "$LOG"
+            PUSH_RESULT=$(/usr/local/emhttp/plugins/harmraid-push/send-push.sh "推送注册成功" "设备已注册" "info" 2>&1)
+            echo "[$(date)] [poll] test push result: $PUSH_RESULT" >> "$LOG"
+            logger -t harmraid-push "Device registered successfully"
+            echo "[$(date)] [poll] Done" >> "$LOG"
+            break
+          fi
         done
+        echo "[$(date)] [poll] Background poll finished" >> "$LOG"
       ) &>/dev/null &
     ]]>
   </INSTALL>
