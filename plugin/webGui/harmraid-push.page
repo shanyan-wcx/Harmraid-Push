@@ -74,9 +74,7 @@ echo count($devices);
 $logFile = "$configDir/add_device.log";
 if (file_exists($logFile)) {
   $log = json_decode(file_get_contents($logFile), true);
-  $lines = [];
-  $lines[] = '退出码: ' . $log['code'];
-  $lines[] = '时间: ' . date('H:i:s', $log['time']);
+  echo '<p style="font-size:12px;color:#888;">退出码: ' . $log['code'] . ' | 时间: ' . date('H:i:s', $log['time']) . '</p>';
   $resultMsg = '';
   if (!empty($log['output'])) {
     foreach ($log['output'] as $l) {
@@ -87,9 +85,8 @@ if (file_exists($logFile)) {
       }
     }
   }
-  if ($resultMsg) { $lines[] = $resultMsg; }
   echo '<pre style="margin-top:10px;max-height:200px;overflow:auto;font-size:11px;background:#1e1e1e;color:#d4d4d4;padding:10px;border-radius:6px;border:1px solid #333;font-family:monospace;">';
-  echo htmlspecialchars(implode("\n", $lines));
+  echo $resultMsg ? htmlspecialchars($resultMsg) : '无输出';
   echo '</pre>';
 } else {
   echo '<p style="color:#888;font-size:12px;">暂无设备添加记录</p>';
