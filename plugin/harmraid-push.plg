@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "harmraid-push">
 <!ENTITY author    "shanyan-wcx">
-<!ENTITY version   "1.2.6">
+<!ENTITY version   "1.2.7">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/&name;.plg">
 <!ENTITY github    "https://github.com/shanyan-wcx/Harmraid-Push">
 ]>
@@ -27,9 +27,11 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/send-push.sh</URL>
     <RUN mode="755">chmod +x /usr/local/emhttp/plugins/harmraid-push/send-push.sh</RUN>
   </FILE>
-  <FILE Name="/boot/config/plugins/harmraid-push/event/notify">
-    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/event/notify</URL>
-    <RUN mode="755">chmod +x /boot/config/plugins/harmraid-push/event/notify</RUN>
+  <FILE Name="/usr/local/emhttp/plugins/dynamix/agents/HarmraidPush.xml">
+    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/agents/HarmraidPush.xml</URL>
+  </FILE>
+  <FILE Name="/usr/local/emhttp/plugins/dynamix/icons/harmraidpush.png">
+    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/icon.png</URL>
   </FILE>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/api.php">
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/api.php</URL>
@@ -47,10 +49,9 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
   <INSTALL>
     <![CDATA[
       chmod +x /usr/local/emhttp/plugins/harmraid-push/send-push.sh
-      chmod +x /boot/config/plugins/harmraid-push/event/notify
       chmod +x /usr/local/emhttp/plugins/harmraid-push/scripts/configure-push
 
-      # Register notification event hook
+      # Initialize default config
       if [ ! -f /boot/config/plugins/harmraid-push/push_enabled.txt ]; then
         echo "true" > /boot/config/plugins/harmraid-push/push_enabled.txt
       fi
@@ -61,12 +62,15 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
         cp /usr/local/emhttp/plugins/harmraid-push/config/settings.json /boot/config/plugins/harmraid-push/settings.json
       fi
 
-      logger -t harmraid-push "Plugin installed v1.2.6"
+      logger -t harmraid-push "Plugin installed v1.2.7"
 
-      # Clean up files from v1.0.0 (installed in wrong paths)
+      # Clean up files from previous versions
       rm -f /usr/local/emhttp/plugins/harmraid-push/README.md
       rm -rf /usr/local/emhttp/plugins/harmraid-push/webGui
       rm -f /usr/local/emhttp/plugins/harmraid-push/register.php
+      rm -f /usr/local/emhttp/plugins/harmraid-push/event/notify
+      rm -f /boot/config/plugins/harmraid-push/event/notify
+      rm -f /usr/local/emhttp/plugins/harmraid-push/scripts/poll-register.sh
       # Ensure scripts are executable
       chmod +x /usr/local/emhttp/plugins/harmraid-push/send-push.sh 2>/dev/null || true
       # Remove deprecated push_token.txt (now using devices.json only)
@@ -77,7 +81,13 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
     <INLINE>
       logger -t harmraid-push "Removing plugin..."
 
-      # Remove all files
+      # Remove Dynamix notification agent
+      rm -f /usr/local/emhttp/plugins/dynamix/agents/HarmraidPush.xml
+      rm -f /usr/local/emhttp/plugins/dynamix/icons/harmraidpush.png
+      rm -f /boot/config/plugins/dynamix/notifications/agents/HarmraidPush.sh
+      rm -f /boot/config/plugins/dynamix/notifications/agents-disabled/HarmraidPush.sh
+
+      # Remove all plugin files
       rm -rf /usr/local/emhttp/plugins/harmraid-push
       rm -rf /boot/config/plugins/harmraid-push
       rm -f /var/log/plugins/harmraid-push*

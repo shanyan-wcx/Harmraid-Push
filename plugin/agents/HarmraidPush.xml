@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Agent>
+  <Name>HarmraidPush</Name>
+  <Variables/>
+  <Script>
+    <![CDATA[
+      #!/bin/bash
+      ############
+      {0}
+      ############
+      /usr/local/emhttp/plugins/harmraid-push/send-push.sh "$SUBJECT" "$DESCRIPTION" "$IMPORTANCE"
+    ]]>
+  </Script>
+</Agent>
