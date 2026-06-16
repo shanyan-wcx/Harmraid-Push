@@ -8,23 +8,25 @@ $pushEnabled = trim(@file_get_contents("$configDir/push_enabled.txt")) ?: 'false
 $pushTypes = trim(@file_get_contents("$configDir/types.txt")) ?: 'alert,warning,info';
 $deviceAdded = '';
 
-if ($_REQUEST['action'] === 'add_device') {
-  $token = trim($_REQUEST['push_token'] ?? '');
-  if ($token) {
-    if (!is_dir($configDir)) { mkdir($configDir, 0755, true); }
-    file_put_contents("$configDir/push_token.txt", $token . "\n", FILE_APPEND | LOCK_EX);
-    $deviceName = trim($_REQUEST['device_name'] ?? '') ?: '未命名设备';
-    $devices = [];
-    $devicesJson = @file_get_contents("$configDir/devices.json");
-    if ($devicesJson) { $devices = json_decode($devicesJson, true) ?? []; }
-    $devices[] = ['token' => $token, 'device_name' => $deviceName];
-    file_put_contents("$configDir/devices.json", json_encode($devices));
-    exec('/usr/local/emhttp/plugins/harmraid-push/send-push.sh "设备注册成功" "设备 ' . $deviceName . ' 已注册" "info" >/dev/null 2>&1');
-    $deviceAdded = htmlspecialchars($deviceName);
-  }
-}
-
 if ($_REQUEST['action'] === 'save') {
+  // Handle device addition
+  if (isset($_GET['add_device'])) {
+    $token = trim($_GET['push_token'] ?? '');
+    if ($token) {
+      if (!is_dir($configDir)) { mkdir($configDir, 0755, true); }
+      file_put_contents("$configDir/push_token.txt", $token . "\n", FILE_APPEND | LOCK_EX);
+      $deviceName = trim($_GET['device_name'] ?? '') ?: '未命名设备';
+      $devices = [];
+      $devicesJson = @file_get_contents("$configDir/devices.json");
+      if ($devicesJson) { $devices = json_decode($devicesJson, true) ?? []; }
+      $devices[] = ['token' => $token, 'device_name' => $deviceName];
+      file_put_contents("$configDir/devices.json", json_encode($devices));
+      exec('/usr/local/emhttp/plugins/harmraid-push/send-push.sh "设备注册成功" "设备 ' . $deviceName . ' 已注册" "info" >/dev/null 2>&1');
+      $deviceAdded = htmlspecialchars($deviceName);
+    }
+  }
+
+  // Normal save logic
   if (!is_dir($configDir)) {
     mkdir($configDir, 0755, true);
   }
@@ -82,7 +84,8 @@ if ($_GET['format'] === 'json') {
 <p style="color:#27ae60;">✅ 设备 "<?=$deviceAdded?>" 已添加，测试推送已发送</p>
 <?php endif; ?>
 <form method="GET">
-<input type="hidden" name="action" value="add_device">
+<input type="hidden" name="action" value="save">
+<input type="hidden" name="add_device" value="1">
 设备名称（可选）: <input type="text" name="device_name" style="width:200px;"><br><br>
 推送令牌: <input type="text" name="push_token" required style="width:400px;"><br><br>
 <input type="submit" value="添加设备" class="button">
