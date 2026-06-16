@@ -91,7 +91,6 @@ RESP=$(curl -s -X POST \
     "token": ${TOKENS}
   },
   "pushOptions": {
-    "testMessage": true,
     "ttl": 86400
   }
 }
