@@ -58,7 +58,7 @@ if ($_GET['format'] === 'json') {
   $devicesJson = @file_get_contents("$configDir/devices.json");
   $devices = $devicesJson ? json_decode($devicesJson, true) : [];
   echo json_encode([
-    'installed' => true, 'version' => '1.0.9',
+    'installed' => true,     'version' => '1.0.10',
     'pushTypes' => $pushTypes,
     'hasCredentials' => count($devices) > 0, 'configStatus' => 'configured',
     'deviceCount' => count($devices), 'devices' => $devices
