@@ -77,7 +77,7 @@ RESP=$(curl -s -X POST \
 {
   "payload": {
     "notification": {
-      "category": "MARKETING",
+      "category": "DEVICE_REMINDER",
       "title": "${TITLE}",
       "body": "${CONTENT}",
       "clickAction": {
