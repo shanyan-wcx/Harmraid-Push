@@ -10,13 +10,13 @@ $devicesJson = @file_get_contents("$configDir/devices.json");
 $devices = $devicesJson ? json_decode($devicesJson, true) : [];
 $deviceCount = count($devices);
 
-if ($_GET['action'] === 'register') {
+if ($_REQUEST['action'] === 'register') {
   if (!is_dir($configDir)) {
     mkdir($configDir, 0755, true);
   }
-  $t = $_GET['token'] ?? '';
-  $dn = $_GET['device_name'] ?? '';
-  $saRaw = $_GET['service_account'] ?? '';
+  $t = $_REQUEST['token'] ?? '';
+  $dn = $_REQUEST['device_name'] ?? '';
+  $saRaw = $_REQUEST['service_account'] ?? '';
   if ($t) {
     $tokenFile = "$configDir/push_token.txt";
     file_put_contents($tokenFile, $t . "\n", FILE_APPEND | LOCK_EX);
@@ -45,7 +45,7 @@ if ($_GET['action'] === 'register') {
   exit;
 }
 
-if ($_GET['action'] === 'save') {
+if ($_REQUEST['action'] === 'save') {
   if (!is_dir($configDir)) {
     mkdir($configDir, 0755, true);
   }
