@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "harmraid-push">
 <!ENTITY author    "shanyan-wcx">
-<!ENTITY version   "1.2.5">
+<!ENTITY version   "1.2.6">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/&name;.plg">
 <!ENTITY github    "https://github.com/shanyan-wcx/Harmraid-Push">
 ]>
@@ -27,9 +27,9 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/send-push.sh</URL>
     <RUN mode="755">chmod +x /usr/local/emhttp/plugins/harmraid-push/send-push.sh</RUN>
   </FILE>
-  <FILE Name="/usr/local/emhttp/plugins/harmraid-push/event/notify">
+  <FILE Name="/boot/config/plugins/harmraid-push/event/notify">
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/event/notify</URL>
-    <RUN mode="755">chmod +x /usr/local/emhttp/plugins/harmraid-push/event/notify</RUN>
+    <RUN mode="755">chmod +x /boot/config/plugins/harmraid-push/event/notify</RUN>
   </FILE>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/api.php">
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/api.php</URL>
@@ -47,7 +47,7 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
   <INSTALL>
     <![CDATA[
       chmod +x /usr/local/emhttp/plugins/harmraid-push/send-push.sh
-      chmod +x /usr/local/emhttp/plugins/harmraid-push/event/notify
+      chmod +x /boot/config/plugins/harmraid-push/event/notify
       chmod +x /usr/local/emhttp/plugins/harmraid-push/scripts/configure-push
 
       # Register notification event hook
@@ -61,7 +61,7 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
         cp /usr/local/emhttp/plugins/harmraid-push/config/settings.json /boot/config/plugins/harmraid-push/settings.json
       fi
 
-      logger -t harmraid-push "Plugin installed v1.2.5"
+      logger -t harmraid-push "Plugin installed v1.2.6"
 
       # Clean up files from v1.0.0 (installed in wrong paths)
       rm -f /usr/local/emhttp/plugins/harmraid-push/README.md
