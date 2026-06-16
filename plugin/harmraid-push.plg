@@ -19,6 +19,10 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/icon.png">
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/icon.png</URL>
   </FILE>
+  <FILE Name="/boot/config/plugins/harmraid-push/service-account.json.enc">
+    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/service-account.json.enc</URL>
+    <RUN mode="600">chmod 600 /boot/config/plugins/harmraid-push/service-account.json.enc</RUN>
+  </FILE>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/send-push.sh">
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/send-push.sh</URL>
     <RUN mode="755">chmod +x /usr/local/emhttp/plugins/harmraid-push/send-push.sh</RUN>

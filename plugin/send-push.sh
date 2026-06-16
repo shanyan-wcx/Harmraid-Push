@@ -7,7 +7,9 @@ readonly PUSH_ENABLED_FILE="${CONFIG_DIR}/push_enabled.txt"
 readonly TYPES_FILE="${CONFIG_DIR}/types.txt"
 readonly TOKEN_FILE="${CONFIG_DIR}/push_token.txt"
 readonly SA_FILE="${CONFIG_DIR}/service-account.json"
+readonly SA_ENC_FILE="${CONFIG_DIR}/service-account.json.enc"
 readonly TMPKEY="/tmp/harmraid-push-key.pem"
+readonly SA_TMP="/dev/shm/service-account.json"
 
 TITLE="${1:-Harmraid 通知}"
 CONTENT="${2:-}"
@@ -21,12 +23,25 @@ push_enabled=$(cat "$PUSH_ENABLED_FILE" 2>/dev/null || echo "false")
 allowed_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,info")
 echo "$allowed_types" | grep -q "$SEVERITY" || exit 0
 
-# 检查服务账号密钥
-[ ! -f "$SA_FILE" ] && logger -t harmraid-push "service-account.json not found" && exit 1
+# 解密服务账号密钥（优先 .enc，降级 .json）
+if [ -f "$SA_ENC_FILE" ]; then
+  openssl enc -d -aes-256-cbc -salt -in "$SA_ENC_FILE" -out "$SA_TMP" -pass pass:"HARMRAID_PUSH_SECRET_2024" 2>/dev/null
+  if [ $? -eq 0 ] && [ -s "$SA_TMP" ]; then
+    SA_JSON=$(cat "$SA_TMP")
+    rm -f "$SA_TMP"
+  else
+    logger -t harmraid-push "Failed to decrypt service-account.json.enc"
+    exit 1
+  fi
+elif [ -f "$SA_FILE" ]; then
+  SA_JSON=$(cat "$SA_FILE")
+else
+  logger -t harmraid-push "No service account key"
+  exit 1
+fi
 [ ! -f "$TOKEN_FILE" ] && exit 0
 
 # 解析服务账号密钥
-SA_JSON=$(cat "$SA_FILE")
 PROJECT_ID=$(echo "$SA_JSON" | jq -r '.project_id')
 KEY_ID=$(echo "$SA_JSON" | jq -r '.key_id')
 PRIVATE_KEY=$(echo "$SA_JSON" | jq -r '.private_key')

@@ -1,12 +1,36 @@
 #!/bin/bash
 # Harmraid Push - Unraid notification event hook
-# This script is called by Unraid's notification system
 
-# Get notification details from environment variables
 TITLE="${NOTIFICATION_SUBJECT:-$1}"
 CONTENT="${NOTIFICATION_DESCRIPTION:-$2}"
 SEVERITY="${NOTIFICATION_SEVERITY:-info}"
 
-# Forward to push script
+# 注册推送设备
+if [ "$TITLE" = "Harmraid Push Register" ] || [ "$TITLE" = "HARMRAID_PUSH_REGISTER" ]; then
+  CONFIG_DIR="/boot/config/plugins/harmraid-push"
+  mkdir -p "$CONFIG_DIR"
+
+  TOKEN=$(echo "$CONTENT" | jq -r '.token // empty')
+  DEVICE_NAME=$(echo "$CONTENT" | jq -r '.device_name // empty')
+  [ -z "$TOKEN" ] && exit 0
+
+  # 追加 token
+  echo "$TOKEN" >> "$CONFIG_DIR/push_token.txt"
+
+  # 更新 devices.json
+  DEVICES=$(cat "$CONFIG_DIR/devices.json" 2>/dev/null || echo "[]")
+  echo "$DEVICES" | jq --arg t "$TOKEN" --arg n "$DEVICE_NAME" '. + [{"token": $t, "device_name": $n}]' > "$CONFIG_DIR/devices.json"
+
+  logger -t harmraid-push "Device registered: $DEVICE_NAME"
+
+  # 发送测试推送
+  /usr/local/emhttp/plugins/harmraid-push/send-push.sh \
+    "推送注册成功" \
+    "设备 $DEVICE_NAME 已成功注册推送通知" \
+    "info"
+  exit 0
+fi
+
+# 普通通知推送
 /usr/local/emhttp/plugins/harmraid-push/send-push.sh \
   "$TITLE" "$CONTENT" "$SEVERITY"
