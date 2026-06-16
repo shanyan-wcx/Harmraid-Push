@@ -4,7 +4,7 @@ Title="Harmraid-Push"
 ---
 <?php
 $configDir = '/boot/config/plugins/harmraid-push';
-$pushTypes = trim(@file_get_contents("$configDir/types.txt")) ?: 'alert,warning,info';
+$pushTypes = trim(@file_get_contents("$configDir/types.txt")) ?: 'ALERT,WARNING,INFO';
 ?>
 <link rel="stylesheet" href="/webGui/styles/default.css">
 <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -14,7 +14,7 @@ $pushTypes = trim(@file_get_contents("$configDir/types.txt")) ?: 'alert,warning,
 <hr>
 
 <h3>通知类型</h3>
-<?php foreach (['alert' => '错误 (Alert)', 'warning' => '警告 (Warning)', 'info' => '普通通知 (Info)'] as $k => $v): ?>
+<?php foreach (['ALERT' => '错误 (Alert)', 'WARNING' => '警告 (Warning)', 'INFO' => '普通通知 (Info)'] as $k => $v): ?>
 <input type="hidden" id="type_<?=$k?>" value="">
 <label><input type="checkbox" id="cb_<?=$k?>" value="<?=$k?>" <?=strpos($pushTypes, $k) !== false ? 'checked' : ''?>> <?=$v?></label><br>
 <?php endforeach; ?><br>
@@ -82,7 +82,7 @@ function apiCall(cmd, extra, cb) {
 
 function saveTypes() {
   var extra = '';
-  <?php foreach (['alert','warning','info'] as $k): ?>
+  <?php foreach (['ALERT','WARNING','INFO'] as $k): ?>
   extra += 'type_<?=$k?>=' + (document.getElementById('cb_<?=$k?>').checked ? '<?=$k?>' : '') + '&';
   <?php endforeach; ?>
   apiCall('save_types', extra, function(){

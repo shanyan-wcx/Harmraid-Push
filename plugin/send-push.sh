@@ -11,7 +11,7 @@ readonly SA_TMP="/dev/shm/service-account.json"
 
 TITLE="${1:-Harmraid 通知}"
 CONTENT="${2:-}"
-SEVERITY="${3:-info}"
+SEVERITY="${3:-INFO}"
 
 # 解密服务账号密钥（优先 .enc，降级 .json）
 if [ -f "$SA_ENC_FILE" ]; then

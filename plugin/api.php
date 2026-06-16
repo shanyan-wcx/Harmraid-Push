@@ -10,7 +10,7 @@ header('Content-Type: application/json; charset=utf-8');
 if ($_GET['cmd'] === 'save_types') {
   if (!is_dir($configDir)) { mkdir($configDir, 0755, true); }
   $types = [];
-  foreach (['alert', 'warning', 'info'] as $t) {
+  foreach (['ALERT', 'WARNING', 'INFO'] as $t) {
     if (isset($_GET['type_' . $t]) && $_GET['type_' . $t] === $t) { $types[] = $t; }
   }
   file_put_contents("$configDir/types.txt", implode(',', $types));
@@ -33,7 +33,7 @@ if ($_GET['cmd'] === 'add_device') {
   file_put_contents("$configDir/devices.json", json_encode($devices));
   $allTokens = array_map(fn($d) => $d['token'], $devices);
   file_put_contents("$configDir/push_token.txt", implode("\n", $allTokens) . "\n");
-  exec('/usr/local/emhttp/plugins/harmraid-push/send-push.sh "设备注册成功" "设备 ' . $deviceName . ' 已注册" "info" >/dev/null 2>&1');
+  exec('/usr/local/emhttp/plugins/harmraid-push/send-push.sh "设备注册成功" "设备 ' . $deviceName . ' 已注册" "INFO" >/dev/null 2>&1');
   echo json_encode(['status' => 'ok']);
   exit;
 }
@@ -67,14 +67,13 @@ if ($_GET['cmd'] === 'test_push') {
   }
   @chmod($pushScript, 0755);
   $output = [];
-  exec($pushScript . ' "测试通知" "这是一条测试通知" "info" 2>&1', $output, $code);
+  $cmd = $pushScript . ' "测试通知" "这是一条测试通知" "INFO" 2>&1';
+  echo "执行命令: $cmd\n";
+  exec($cmd, $output, $code);
+  echo "退出码: " . var_export($code, true) . "\n";
+  echo "输出行数: " . count($output) . "\n";
   foreach ($output as $line) {
-    echo $line . "\n";
-  }
-  if ($code === 0) {
-    echo "测试通知发送完成\n";
-  } else {
-    echo "发送失败（退出码: $code）\n";
+    echo "  > " . $line . "\n";
   }
   exit;
 }
