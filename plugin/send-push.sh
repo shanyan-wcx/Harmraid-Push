@@ -3,7 +3,6 @@
 # 由 event/notify 钩子调用
 
 readonly CONFIG_DIR="/boot/config/plugins/harmraid-push"
-readonly TYPES_FILE="${CONFIG_DIR}/types.txt"
 readonly TOKEN_FILE="${CONFIG_DIR}/push_token.txt"
 readonly SA_FILE="${CONFIG_DIR}/service-account.json"
 readonly SA_ENC_FILE="${CONFIG_DIR}/service-account.json.enc"
@@ -13,10 +12,6 @@ readonly SA_TMP="/dev/shm/service-account.json"
 TITLE="${1:-Harmraid 通知}"
 CONTENT="${2:-}"
 SEVERITY="${3:-info}"
-
-# 检查通知类型
-allowed_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,info")
-echo "$allowed_types" | grep -q "$SEVERITY" || exit 0
 
 # 解密服务账号密钥（优先 .enc，降级 .json）
 if [ -f "$SA_ENC_FILE" ]; then
