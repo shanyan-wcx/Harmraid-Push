@@ -35,9 +35,6 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/scripts/configure-push</URL>
     <RUN mode="755">chmod +x /usr/local/emhttp/plugins/harmraid-push/scripts/configure-push</RUN>
   </FILE>
-  <FILE Name="/usr/local/emhttp/plugins/harmraid-push/register.php">
-    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/register.php</URL>
-  </FILE>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/harmraid-push.page">
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/webGui/harmraid-push.page</URL>
   </FILE>
@@ -66,6 +63,31 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
       # Clean up files from v1.0.0 (installed in wrong paths)
       rm -f /usr/local/emhttp/plugins/harmraid-push/README.md
       rm -rf /usr/local/emhttp/plugins/harmraid-push/webGui
+      rm -f /usr/local/emhttp/plugins/harmraid-push/register.php
+
+      # Background poll for device registration notification (60s max)
+      (
+        for i in $(seq 1 60); do
+          sleep 1
+          RESULT=$(curl -s http://localhost/graphql \
+            -H "Content-Type: application/json" \
+            -d '{"query":"{ notifications { list(filter: UNREAD) { id subject description } } }"}')
+          REG_ID=$(echo "$RESULT" | jq -r '.data.notifications.list[] | select(.subject == "HARMRAID_PUSH_REGISTER") | .id' | head -1)
+          [ -z "$REG_ID" ] && continue
+          TOKEN=$(echo "$RESULT" | jq -r ".data.notifications.list[] | select(.id == \"$REG_ID\") | .description" | jq -r '.token')
+          DEVICE=$(echo "$RESULT" | jq -r ".data.notifications.list[] | select(.id == \"$REG_ID\") | .description" | jq -r '.device_name / ""')
+          [ -z "$TOKEN" ] && continue
+          mkdir -p /boot/config/plugins/harmraid-push
+          echo "$TOKEN" >> /boot/config/plugins/harmraid-push/push_token.txt
+          DEVICES=$(cat /boot/config/plugins/harmraid-push/devices.json 2>/dev/null || echo "[]")
+          echo "$DEVICES" | jq --arg t "$TOKEN" --arg n "${DEVICE:-未知设备}" '. + [{"token": $t, "device_name": $n}]' > /boot/config/plugins/harmraid-push/devices.json
+          curl -s http://localhost/graphql -H "Content-Type: application/json" \
+            -d '{"query":"mutation { archiveNotification(id: \"'"$REG_ID"'\") { id } }"}' >/dev/null
+          /usr/local/emhttp/plugins/harmraid-push/send-push.sh "推送注册成功" "设备已注册" "info" >/dev/null 2>&1
+          logger -t harmraid-push "Device registered: $TOKEN"
+          break
+        done
+      ) &>/dev/null &
     ]]>
   </INSTALL>
   <FILE Run="/bin/bash" Method="remove">
