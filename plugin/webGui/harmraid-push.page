@@ -26,6 +26,22 @@ if ($_REQUEST['action'] === 'save') {
     }
   }
 
+  // Handle device deletion
+  if (isset($_GET['delete_device'])) {
+    $delToken = $_GET['delete_device'];
+    $newDevices = [];
+    foreach ($devices as $d) {
+      if ($d['token'] !== $delToken) { $newDevices[] = $d; }
+    }
+    file_put_contents("$configDir/devices.json", json_encode($newDevices));
+    $lines = file("$configDir/push_token.txt", FILE_IGNORE_NEW_LINES);
+    $newLines = [];
+    foreach ($lines as $l) {
+      if (trim($l) !== $delToken) { $newLines[] = $l; }
+    }
+    file_put_contents("$configDir/push_token.txt", implode("\n", $newLines) . "\n");
+  }
+
   // Normal save logic
   if (!is_dir($configDir)) {
     mkdir($configDir, 0755, true);
@@ -98,11 +114,20 @@ $devices = $devicesJson ? json_decode($devicesJson, true) : [];
 echo count($devices);
 ?> 台设备</p>
 <?php if (count($devices) > 0): ?>
-<ul style="padding-left:20px;margin-top:4px;">
+<table style="width:100%;border-collapse:collapse;">
+<tr style="border-bottom:1px solid #ddd;">
+  <th style="padding:8px 4px;text-align:left;font-size:12px;color:#888;font-weight:600;">设备名称</th>
+  <th style="padding:8px 4px;text-align:left;font-size:12px;color:#888;font-weight:600;">推送令牌</th>
+  <th style="padding:8px 4px;width:50px;"></th>
+</tr>
 <?php foreach ($devices as $d): ?>
-<li style="margin-bottom:4px;font-size:13px;"><?=htmlspecialchars($d['device_name'] ?? '未知')?> — <code style="font-size:11px;color:#666;"><?=substr($d['token'], 0, 20)?>...</code></li>
+<tr style="border-bottom:1px solid #eee;">
+  <td style="padding:6px 4px;font-size:13px;"><?=htmlspecialchars($d['device_name'])?></td>
+  <td style="padding:6px 4px;"><code style="font-size:11px;color:#666;"><?=substr($d['token'],0,20)?>...</code></td>
+  <td style="padding:6px 4px;"><a href="?action=save&delete_device=<?=urlencode($d['token'])?>" style="color:#c00;font-size:12px;text-decoration:none;" onclick="return confirm('确认删除此设备？')">删除</a></td>
+</tr>
 <?php endforeach; ?>
-</ul>
+</table>
 <?php else: ?>
 <p style="color:#888;margin-top:4px;">无推送令牌</p>
 <?php endif; ?>
