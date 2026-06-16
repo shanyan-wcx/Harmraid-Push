@@ -3,7 +3,6 @@
 # 由 event/notify 钩子调用
 
 readonly CONFIG_DIR="/boot/config/plugins/harmraid-push"
-readonly PUSH_ENABLED_FILE="${CONFIG_DIR}/push_enabled.txt"
 readonly TYPES_FILE="${CONFIG_DIR}/types.txt"
 readonly TOKEN_FILE="${CONFIG_DIR}/push_token.txt"
 readonly SA_FILE="${CONFIG_DIR}/service-account.json"
@@ -14,10 +13,6 @@ readonly SA_TMP="/dev/shm/service-account.json"
 TITLE="${1:-Harmraid 通知}"
 CONTENT="${2:-}"
 SEVERITY="${3:-info}"
-
-# 检查推送是否启用
-push_enabled=$(cat "$PUSH_ENABLED_FILE" 2>/dev/null || echo "false")
-[ "$push_enabled" != "true" ] && exit 0
 
 # 检查通知类型
 allowed_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,info")
