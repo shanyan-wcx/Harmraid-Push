@@ -4,60 +4,53 @@ Title="Harmraid-Push"
 ---
 <?php
 $configDir = '/boot/config/plugins/harmraid-push';
-$pushEnabled = trim(@file_get_contents("$configDir/push_enabled.txt")) ?: 'false';
 $pushTypes = trim(@file_get_contents("$configDir/types.txt")) ?: 'alert,warning,info';
 $deviceAdded = '';
 
 if ($_REQUEST['action'] === 'save') {
+  if (!is_dir($configDir)) { mkdir($configDir, 0755, true); }
+
   // Handle device addition
   if (isset($_GET['add_device'])) {
     $token = trim($_GET['push_token'] ?? '');
     if ($token) {
-      if (!is_dir($configDir)) { mkdir($configDir, 0755, true); }
-      file_put_contents("$configDir/push_token.txt", $token . "\n", FILE_APPEND | LOCK_EX);
       $deviceName = trim($_GET['device_name'] ?? '') ?: '未命名设备';
       $devices = [];
       $devicesJson = @file_get_contents("$configDir/devices.json");
       if ($devicesJson) { $devices = json_decode($devicesJson, true) ?? []; }
       $devices[] = ['token' => $token, 'device_name' => $deviceName];
       file_put_contents("$configDir/devices.json", json_encode($devices));
+      // Rebuild push_token.txt from devices.json
+      $allTokens = array_map(fn($d) => $d['token'], $devices);
+      file_put_contents("$configDir/push_token.txt", implode("\n", $allTokens) . "\n");
       exec('/usr/local/emhttp/plugins/harmraid-push/send-push.sh "设备注册成功" "设备 ' . $deviceName . ' 已注册" "info" >/dev/null 2>&1');
       $deviceAdded = htmlspecialchars($deviceName);
     }
   }
 
-  // Handle device deletion
-  if (isset($_GET['delete_device'])) {
-    $delToken = $_GET['delete_device'];
-    $newDevices = [];
-    foreach ($devices as $d) {
-      if ($d['token'] !== $delToken) { $newDevices[] = $d; }
+  // Handle device deletion by index
+  if (isset($_GET['delete_idx'])) {
+    $delIdx = intval($_GET['delete_idx']);
+    $devices = [];
+    $devicesJson = @file_get_contents("$configDir/devices.json");
+    if ($devicesJson) { $devices = json_decode($devicesJson, true) ?? []; }
+    if ($delIdx >= 0 && $delIdx < count($devices)) {
+      array_splice($devices, $delIdx, 1);
+      file_put_contents("$configDir/devices.json", json_encode($devices));
+      $allTokens = array_map(fn($d) => $d['token'], $devices);
+      file_put_contents("$configDir/push_token.txt", implode("\n", $allTokens) . "\n");
     }
-    file_put_contents("$configDir/devices.json", json_encode($newDevices));
-    $lines = file("$configDir/push_token.txt", FILE_IGNORE_NEW_LINES);
-    $newLines = [];
-    foreach ($lines as $l) {
-      if (trim($l) !== $delToken) { $newLines[] = $l; }
-    }
-    file_put_contents("$configDir/push_token.txt", implode("\n", $newLines) . "\n");
   }
 
-  // Normal save logic
-  if (!is_dir($configDir)) {
-    mkdir($configDir, 0755, true);
-  }
-  $pushEnabled = isset($_GET['push_enabled']) && $_GET['push_enabled'] === 'true' ? 'true' : 'false';
-  file_put_contents("$configDir/push_enabled.txt", $pushEnabled);
+  // Save notification types
   $types = [];
   foreach (['alert', 'warning', 'info'] as $t) {
     if (isset($_GET['type_' . $t]) && $_GET['type_' . $t] === $t) { $types[] = $t; }
   }
   $pushTypes = implode(',', $types);
   file_put_contents("$configDir/types.txt", $pushTypes);
-  $readBack = trim(@file_get_contents("$configDir/push_enabled.txt")) ?: '';
-  $saved = ($readBack === $pushEnabled);
-  $pushEnabled = $readBack ?: 'false';
   $pushTypes = trim(@file_get_contents("$configDir/types.txt")) ?: 'alert,warning,info';
+  $saved = true;
 }
 
 if ($_GET['format'] === 'json') {
@@ -66,7 +59,7 @@ if ($_GET['format'] === 'json') {
   $devices = $devicesJson ? json_decode($devicesJson, true) : [];
   echo json_encode([
     'installed' => true, 'version' => '1.0.9',
-    'pushEnabled' => $pushEnabled === 'true', 'pushTypes' => $pushTypes,
+    'pushTypes' => $pushTypes,
     'hasCredentials' => count($devices) > 0, 'configStatus' => 'configured',
     'deviceCount' => count($devices), 'devices' => $devices
   ]);
@@ -82,8 +75,6 @@ if ($_GET['format'] === 'json') {
 
 <form method="GET">
 <input type="hidden" name="action" value="save">
-<h3>推送状态</h3>
-<label><input type="checkbox" name="push_enabled" value="true" <?=$pushEnabled === 'true' ? 'checked' : ''?>> 启用推送通知</label><br><br>
 <h3>通知类型</h3>
 <?php foreach (['alert' => '错误 (Alert)', 'warning' => '警告 (Warning)', 'info' => '普通通知 (Info)'] as $k => $v): ?>
 <input type="hidden" name="type_<?=$k?>" value="">
@@ -120,13 +111,19 @@ echo count($devices);
   <th style="padding:8px 4px;text-align:left;font-size:12px;color:#888;font-weight:600;">推送令牌</th>
   <th style="padding:8px 4px;width:50px;"></th>
 </tr>
-<?php foreach ($devices as $d): ?>
+<?php $idx = 0; foreach ($devices as $d): ?>
 <tr style="border-bottom:1px solid #eee;">
   <td style="padding:6px 4px;font-size:13px;"><?=htmlspecialchars($d['device_name'])?></td>
   <td style="padding:6px 4px;"><code style="font-size:11px;color:#666;"><?=substr($d['token'],0,20)?>...</code></td>
-  <td style="padding:6px 4px;"><a href="?action=save&delete_device=<?=urlencode($d['token'])?>" style="color:#c00;font-size:12px;text-decoration:none;" onclick="return confirm('确认删除此设备？')">删除</a></td>
+  <td style="padding:6px 4px;">
+    <form method="GET" style="display:inline;">
+    <input type="hidden" name="action" value="save">
+    <input type="hidden" name="delete_idx" value="<?=$idx?>">
+    <button type="submit" style="background:none;border:none;color:#c00;cursor:pointer;font-size:12px;padding:0;" onclick="return confirm('确认删除此设备？')">删除</button>
+    </form>
+  </td>
 </tr>
-<?php endforeach; ?>
+<?php $idx++; endforeach; ?>
 </table>
 <?php else: ?>
 <p style="color:#888;margin-top:4px;">无推送令牌</p>
