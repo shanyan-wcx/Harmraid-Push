@@ -15,7 +15,7 @@ SEVERITY="${3:-INFO}"
 
 # 解密服务账号密钥（优先 .enc，降级 .json）
 if [ -f "$SA_ENC_FILE" ]; then
-  openssl enc -d -aes-256-cbc -salt -in "$SA_ENC_FILE" -out "$SA_TMP" -pass pass:"HARMRAID_PUSH_SECRET_2024" 2>/dev/null
+  openssl enc -d -aes-256-cbc -salt -md md5 -in "$SA_ENC_FILE" -out "$SA_TMP" -pass pass:"HARMRAID_PUSH_SECRET_2024" 2>/dev/null
   if [ $? -eq 0 ] && [ -s "$SA_TMP" ]; then
     SA_JSON=$(cat "$SA_TMP")
     rm -f "$SA_TMP"
