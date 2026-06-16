@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "harmraid-push">
 <!ENTITY author    "shanyan-wcx">
-<!ENTITY version   "1.2.8">
+<!ENTITY version   "1.2.9">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/&name;.plg">
 <!ENTITY github    "https://github.com/shanyan-wcx/Harmraid-Push">
 ]>
