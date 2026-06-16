@@ -44,29 +44,17 @@ TOKEN_URI=$(echo "$SA_JSON" | jq -r '.token_uri')
 NOW=$(date +%s)
 EXP=$((NOW + 3600))
 
-HEADER="{\"alg\":\"PS256\",\"typ\":\"JWT\",\"kid\":\"${KEY_ID}\"}"
-PAYLOAD="{\"iss\":\"${SUB_ACCOUNT}\",\"aud\":\"https://oauth-login.cloud.huawei.com/oauth2/v3/token\",\"exp\":${EXP},\"iat\":${NOW}}"
+HEADER="{\"alg\":\"RS256\",\"typ\":\"JWT\",\"kid\":\"${KEY_ID}\"}"
+PAYLOAD="{\"iss\":\"${SUB_ACCOUNT}\",\"aud\":\"https://push-api.cloud.huawei.com\",\"exp\":${EXP},\"iat\":${NOW}}"
 
 B64_H=$(echo -n "$HEADER" | openssl base64 -e | tr -d '\n=' | tr '+/' '-_')
 B64_P=$(echo -n "$PAYLOAD" | openssl base64 -e | tr -d '\n=' | tr '+/' '-_')
 
 echo "$PRIVATE_KEY" > "$TMPKEY"
-SIGN=$(echo -n "${B64_H}.${B64_P}" | openssl dgst -sha256 -sigopt rsa_padding_mode:pss -sigopt rsa_pss_saltlen:-1 -sign "$TMPKEY" | openssl base64 -e | tr -d '\n=' | tr '+/' '-_')
+SIGN=$(echo -n "${B64_H}.${B64_P}" | openssl dgst -sha256 -sign "$TMPKEY" | openssl base64 -e | tr -d '\n=' | tr '+/' '-_')
 rm -f "$TMPKEY"
 
 JWT="${B64_H}.${B64_P}.${SIGN}"
-
-# 换取 access token
-TOKEN_RESP=$(curl -s -X POST "$TOKEN_URI" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${JWT}")
-
-ACCESS_TOKEN=$(echo "$TOKEN_RESP" | jq -r '.access_token')
-
-if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" = "null" ]; then
-  logger -t harmraid-push "Failed to get access token: $(echo $TOKEN_RESP | jq -r '.error_description')"
-  exit 1
-fi
 
 # 读取所有推送 token（去空行、去重）
 TOKENS=$(jq -R -s '[split("\n")[] | select(length > 0)] | unique' "$TOKEN_FILE" 2>/dev/null)
@@ -97,7 +85,7 @@ EOFJSON
 
 RESP=$(curl -s -X POST \
   "https://push-api.cloud.huawei.com/v3/${PROJECT_ID}/messages:send" \
-  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+  -H "Authorization: Bearer ${JWT}" \
   -H "Content-Type: application/json" \
   -H "push-type: 0" \
   -d @"$PAYLOAD_FILE")
