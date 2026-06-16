@@ -1,6 +1,6 @@
 <?php
 # Harmraid Push - Device Registration API
-# Accessed via /plugins/harmraid-push/api/register
+# Called via /plugins/harmraid-push/register.php
 # Authentication: x-api-key (handled automatically by emhttp)
 
 $configDir = '/boot/config/plugins/harmraid-push';
@@ -37,7 +37,7 @@ $devices[] = ['token' => $token, 'device_name' => $deviceName];
 file_put_contents("$configDir/devices.json", json_encode($devices));
 @chmod("$configDir/devices.json", 0666);
 
-# Send test push to verify the full chain
+# Send test push
 $testResult = '';
 $pushScript = '/usr/local/emhttp/plugins/harmraid-push/send-push.sh';
 if (file_exists($pushScript)) {

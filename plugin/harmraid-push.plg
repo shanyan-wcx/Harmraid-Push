@@ -35,8 +35,8 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/scripts/configure-push</URL>
     <RUN mode="755">chmod +x /usr/local/emhttp/plugins/harmraid-push/scripts/configure-push</RUN>
   </FILE>
-  <FILE Name="/usr/local/emhttp/plugins/harmraid-push/api/register">
-    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/api/register</URL>
+  <FILE Name="/usr/local/emhttp/plugins/harmraid-push/register.php">
+    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/register.php</URL>
   </FILE>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/harmraid-push.page">
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/webGui/harmraid-push.page</URL>
