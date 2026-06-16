@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "harmraid-push">
 <!ENTITY author    "shanyan-wcx">
-<!ENTITY version   "1.2.7">
+<!ENTITY version   "1.2.8">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/&name;.plg">
 <!ENTITY github    "https://github.com/shanyan-wcx/Harmraid-Push">
 ]>
@@ -62,7 +62,7 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
         cp /usr/local/emhttp/plugins/harmraid-push/config/settings.json /boot/config/plugins/harmraid-push/settings.json
       fi
 
-      logger -t harmraid-push "Plugin installed v1.2.7"
+      logger -t harmraid-push "Plugin installed v1.2.8"
 
       # Clean up files from previous versions
       rm -f /usr/local/emhttp/plugins/harmraid-push/README.md

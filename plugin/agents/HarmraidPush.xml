@@ -8,7 +8,7 @@
       ############
       {0}
       ############
-      /usr/local/emhttp/plugins/harmraid-push/send-push.sh "$SUBJECT" "$DESCRIPTION" "$IMPORTANCE"
+      bash /usr/local/emhttp/plugins/harmraid-push/send-push.sh "$SUBJECT" "$DESCRIPTION" "$IMPORTANCE"
     ]]>
   </Script>
 </Agent>
