@@ -6,45 +6,51 @@ Title="Harmraid-Push"
 $configDir = '/boot/config/plugins/harmraid-push';
 $pushEnabled = trim(@file_get_contents("$configDir/push_enabled.txt")) ?: 'false';
 $pushTypes = trim(@file_get_contents("$configDir/types.txt")) ?: 'alert,warning,info';
-$devicesJson = @file_get_contents("$configDir/devices.json");
-$devices = $devicesJson ? json_decode($devicesJson, true) : [];
-$deviceCount = count($devices);
+$deviceAdded = '';
+
+if ($_REQUEST['action'] === 'add_device') {
+  $token = trim($_REQUEST['push_token'] ?? '');
+  if ($token) {
+    if (!is_dir($configDir)) { mkdir($configDir, 0755, true); }
+    file_put_contents("$configDir/push_token.txt", $token . "\n", FILE_APPEND | LOCK_EX);
+    $deviceName = trim($_REQUEST['device_name'] ?? '') ?: '未命名设备';
+    $devices = [];
+    $devicesJson = @file_get_contents("$configDir/devices.json");
+    if ($devicesJson) { $devices = json_decode($devicesJson, true) ?? []; }
+    $devices[] = ['token' => $token, 'device_name' => $deviceName];
+    file_put_contents("$configDir/devices.json", json_encode($devices));
+    exec('/usr/local/emhttp/plugins/harmraid-push/send-push.sh "设备注册成功" "设备 ' . $deviceName . ' 已注册" "info" >/dev/null 2>&1');
+    $deviceAdded = htmlspecialchars($deviceName);
+  }
+}
 
 if ($_REQUEST['action'] === 'save') {
   if (!is_dir($configDir)) {
     mkdir($configDir, 0755, true);
   }
-
   $pushEnabled = isset($_GET['push_enabled']) && $_GET['push_enabled'] === 'true' ? 'true' : 'false';
   file_put_contents("$configDir/push_enabled.txt", $pushEnabled);
-
   $types = [];
   foreach (['alert', 'warning', 'info'] as $t) {
-    if (isset($_GET['type_' . $t]) && $_GET['type_' . $t] === $t) {
-      $types[] = $t;
-    }
+    if (isset($_GET['type_' . $t]) && $_GET['type_' . $t] === $t) { $types[] = $t; }
   }
   $pushTypes = implode(',', $types);
   file_put_contents("$configDir/types.txt", $pushTypes);
-
   $readBack = trim(@file_get_contents("$configDir/push_enabled.txt")) ?: '';
   $saved = ($readBack === $pushEnabled);
-
   $pushEnabled = $readBack ?: 'false';
   $pushTypes = trim(@file_get_contents("$configDir/types.txt")) ?: 'alert,warning,info';
 }
 
 if ($_GET['format'] === 'json') {
   header('Content-Type: application/json');
+  $devicesJson = @file_get_contents("$configDir/devices.json");
+  $devices = $devicesJson ? json_decode($devicesJson, true) : [];
   echo json_encode([
-    'installed' => true,
-    'version' => '1.0.8',
-    'pushEnabled' => $pushEnabled === 'true',
-    'pushTypes' => $pushTypes,
-    'hasCredentials' => $deviceCount > 0,
-    'configStatus' => 'configured',
-    'deviceCount' => $deviceCount,
-    'devices' => $devices
+    'installed' => true, 'version' => '1.0.9',
+    'pushEnabled' => $pushEnabled === 'true', 'pushTypes' => $pushTypes,
+    'hasCredentials' => count($devices) > 0, 'configStatus' => 'configured',
+    'deviceCount' => count($devices), 'devices' => $devices
   ]);
   exit;
 }
@@ -55,6 +61,7 @@ if ($_GET['format'] === 'json') {
 </div>
 <p>Harmraid 应用的 Unraid 推送通知插件。</p>
 <hr>
+
 <form method="GET">
 <input type="hidden" name="action" value="save">
 <h3>推送状态</h3>
@@ -64,41 +71,35 @@ if ($_GET['format'] === 'json') {
 <input type="hidden" name="type_<?=$k?>" value="">
 <label><input type="checkbox" name="type_<?=$k?>" value="<?=$k?>" <?=strpos($pushTypes, $k) !== false ? 'checked' : ''?>> <?=$v?></label><br>
 <?php endforeach; ?><br>
+<input type="submit" value="保存设置" class="button">
+<?php if (isset($saved) && $saved): ?><p style="color:#27ae60;margin-top:8px;">✅ 已保存</p><?php endif; ?>
+</form>
+
+<hr>
+
+<h3>设备管理</h3>
+<?php if ($deviceAdded): ?>
+<p style="color:#27ae60;">✅ 设备 "<?=$deviceAdded?>" 已添加，测试推送已发送</p>
+<?php endif; ?>
+<form method="GET">
+<input type="hidden" name="action" value="add_device">
+设备名称（可选）: <input type="text" name="device_name" style="width:200px;"><br><br>
+推送令牌: <input type="text" name="push_token" required style="width:400px;"><br><br>
+<input type="submit" value="添加设备" class="button">
+</form>
+
 <h3>设备状态</h3>
-<p>已注册 <?=$deviceCount?> 台设备</p>
-<?php if ($deviceCount > 0): ?>
+<p>已注册 <?php
+$devicesJson = @file_get_contents("$configDir/devices.json");
+$devices = $devicesJson ? json_decode($devicesJson, true) : [];
+echo count($devices);
+?> 台设备</p>
+<?php if (count($devices) > 0): ?>
 <ul style="padding-left:20px;margin-top:4px;">
 <?php foreach ($devices as $d): ?>
-<?php $shortToken = substr($d['token'], 0, 20) . '...'; ?>
-<li style="margin-bottom:4px;font-size:13px;"><?=htmlspecialchars($d['device_name'])?> — <code style="font-size:11px;color:#666;"><?=$shortToken?></code></li>
+<li style="margin-bottom:4px;font-size:13px;"><?=htmlspecialchars($d['device_name'] ?? '未知')?> — <code style="font-size:11px;color:#666;"><?=substr($d['token'], 0, 20)?>...</code></li>
 <?php endforeach; ?>
 </ul>
 <?php else: ?>
 <p style="color:#888;margin-top:4px;">无推送令牌</p>
-<?php endif; ?><br>
-<input type="submit" value="保存设置" class="button">
-<?php if (isset($saved) && $saved): ?>
-<p style="color:#27ae60;margin-top:8px;">✅ 已保存</p>
 <?php endif; ?>
-</form>
-
-<hr style="margin-top:32px;">
-<h3>调试日志</h3>
-<p style="font-size:12px;color:#888;">最后 50 行 — <a href="?action=clear_log" style="color:#c00;" onclick="return confirm('确认清空日志？')">清空日志</a></p>
-<?php
-$logFile = '/var/log/harmraid-push.log';
-if ($_GET['action'] === 'clear_log') {
-  @file_put_contents($logFile, '');
-  echo '<p style="color:#27ae60;">日志已清空</p>';
-}
-$logContent = @file_get_contents($logFile);
-if ($logContent) {
-  $lines = explode("\n", trim($logContent));
-  $lastLines = array_slice($lines, -50);
-  echo '<pre style="max-height:400px;overflow:auto;font-size:11px;background:#1e1e1e;color:#d4d4d4;padding:10px;border-radius:6px;line-height:1.5;font-family:monospace;">';
-  echo htmlspecialchars(implode("\n", $lastLines));
-  echo '</pre>';
-} else {
-  echo '<p style="color:#888;">暂无日志</p>';
-}
-?>
