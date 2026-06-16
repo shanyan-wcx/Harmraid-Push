@@ -67,7 +67,7 @@ echo count($devices);
 
 <h3>发送测试通知</h3>
 <button onclick="sendTestPush()" class="button">📤 发送测试通知</button>
-<div id="push-log" style="margin-top:10px;max-height:200px;overflow:auto;font-size:11px;background:#1e1e1e;color:#d4d4d4;padding:10px;border-radius:6px;font-family:monospace;display:none;"></div>
+<div id="push-log" style="margin-top:10px;max-height:200px;overflow:auto;font-size:11px;background:#1e1e1e;color:#d4d4d4;padding:10px;border-radius:6px;border:1px solid #333;font-family:monospace;display:none;"></div>
 
 <h3>添加设备日志</h3>
 <?php
@@ -80,7 +80,7 @@ if (file_exists($logFile)) {
   if (!empty($log['output'])) {
     foreach ($log['output'] as $l) { $lines[] = $l; }
   }
-  echo '<pre style="margin-top:10px;max-height:200px;overflow:auto;font-size:11px;background:#1e1e1e;color:#d4d4d4;padding:10px;border-radius:6px;font-family:monospace;">';
+  echo '<pre style="margin-top:10px;max-height:200px;overflow:auto;font-size:11px;background:#1e1e1e;color:#d4d4d4;padding:10px;border-radius:6px;border:1px solid #333;font-family:monospace;">';
   echo htmlspecialchars(implode("\n", $lines));
   echo '</pre>';
 } else {
