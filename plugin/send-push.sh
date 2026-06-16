@@ -85,7 +85,7 @@ RESP=$(curl -s -X POST \
       },
       "foregroundShow": true
     },
-    "data": "{\\\"title\\\":\\\"${TITLE}\\\",\\\"content\\\":\\\"${CONTENT}\\\",\\\"severity\\\":\\\"${SEVERITY}\\\"}"
+    "data": "{\"title\":\"${TITLE}\",\"content\":\"${CONTENT}\",\"severity\":\"${SEVERITY}\"}"
   },
   "target": {
     "token": ${TOKENS}
