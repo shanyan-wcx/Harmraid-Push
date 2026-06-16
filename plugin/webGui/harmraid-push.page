@@ -98,7 +98,7 @@ echo count($devices);
 <tr style="border-bottom:1px solid #eee;">
   <td style="padding:6px 4px;font-size:13px;"><?=htmlspecialchars($d['device_name'])?></td>
   <td style="padding:6px 4px;white-space:nowrap;">
-    <span class="token-wrap" data-token="<?=htmlspecialchars($d['token'])?>" data-prefix="<?=htmlspecialchars(substr($d['token'],0,8))?>"
+    <span class="token-wrap" data-token="<?=htmlspecialchars($d['token'])?>" data-prefix="<?=htmlspecialchars(substr($d['token'],0,8) . str_repeat('*', max(0, strlen($d['token']) - 8)))?>"
           style="font-size:11px;color:#666;font-family:monospace;">
       <?=htmlspecialchars(substr($d['token'],0,8)) . str_repeat('*', max(0, strlen($d['token']) - 8))?>
     </span>

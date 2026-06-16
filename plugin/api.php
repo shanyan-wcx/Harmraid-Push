@@ -13,8 +13,10 @@ if ($_GET['cmd'] === 'test_push') {
     echo "无设备已注册，无法发送测试通知\n";
     exit;
   }
+  $pushScript = '/usr/local/emhttp/plugins/harmraid-push/send-push.sh';
+  @chmod($pushScript, 0755);
   $output = [];
-  exec('/usr/local/emhttp/plugins/harmraid-push/send-push.sh "测试通知" "这是一条来自 Harmraid Push 的测试通知" "info" 2>&1', $output, $code);
+  exec($pushScript . ' "测试通知" "这是一条来自 Harmraid Push 的测试通知" "info" 2>&1', $output, $code);
   foreach ($output as $line) {
     echo $line . "\n";
   }
