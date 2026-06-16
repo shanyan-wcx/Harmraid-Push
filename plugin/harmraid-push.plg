@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "harmraid-push">
 <!ENTITY author    "shanyan-wcx">
-<!ENTITY version   "1.2.9">
+<!ENTITY version   "1.3.0">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/&name;.plg">
 <!ENTITY github    "https://github.com/shanyan-wcx/Harmraid-Push">
 ]>
@@ -33,15 +33,9 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
   <FILE Name="/usr/local/emhttp/plugins/dynamix/icons/harmraidpush.png">
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/icon.png</URL>
   </FILE>
-  <FILE Name="/usr/local/emhttp/plugins/harmraid-push/api.php">
-    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/api.php</URL>
-  </FILE>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/scripts/configure-push">
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/scripts/configure-push</URL>
     <RUN mode="755">chmod +x /usr/local/emhttp/plugins/harmraid-push/scripts/configure-push</RUN>
-  </FILE>
-  <FILE Name="/usr/local/emhttp/plugins/harmraid-push/harmraid-push.page">
-    <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/webGui/harmraid-push.page</URL>
   </FILE>
   <FILE Name="/usr/local/emhttp/plugins/harmraid-push/config/settings.json">
     <URL>https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/config/settings.json</URL>
@@ -51,7 +45,32 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
       chmod +x /usr/local/emhttp/plugins/harmraid-push/send-push.sh
       chmod +x /usr/local/emhttp/plugins/harmraid-push/scripts/configure-push
 
-      # Initialize default config
+      # 直接生成通知代理脚本（默认启用）
+      mkdir -p /boot/config/plugins/dynamix/notifications/agents
+      cat > /boot/config/plugins/dynamix/notifications/agents/HarmraidPush.sh << 'AGENT'
+#!/bin/bash
+############
+{0}
+############
+echo "$HARMRAID_TOKEN" > /boot/config/plugins/harmraid-push/token.txt
+bash /usr/local/emhttp/plugins/harmraid-push/send-push.sh "$SUBJECT" "$DESCRIPTION" "$IMPORTANCE" "$HARMRAID_TOKEN"
+AGENT
+      chmod +x /boot/config/plugins/dynamix/notifications/agents/HarmraidPush.sh
+
+      # 在通知设置中启用代理位(4)，保留原有邮件/浏览器设置
+      CFG="/boot/config/plugins/dynamix/dynamix.cfg"
+      if [ -f "$CFG" ]; then
+        for level in Normal Warning Alert; do
+          key="notify${level}"
+          current=$(grep "^${key}=" "$CFG" | head -1 | cut -d'"' -f2)
+          if [ -n "$current" ] && [ "$current" -eq "$current" ] 2>/dev/null; then
+            new=$((current | 4))
+            sed -i "s/^${key}=.*/${key}=\"${new}\"/" "$CFG"
+          fi
+        done
+      fi
+
+      # 初始化默认配置
       if [ ! -f /boot/config/plugins/harmraid-push/push_enabled.txt ]; then
         echo "true" > /boot/config/plugins/harmraid-push/push_enabled.txt
       fi
@@ -62,19 +81,22 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
         cp /usr/local/emhttp/plugins/harmraid-push/config/settings.json /boot/config/plugins/harmraid-push/settings.json
       fi
 
-      logger -t harmraid-push "Plugin installed v1.2.8"
+      logger -t harmraid-push "Plugin installed v1.3.0"
 
-      # Clean up files from previous versions
+      # 清理旧版本遗留文件
       rm -f /usr/local/emhttp/plugins/harmraid-push/README.md
       rm -rf /usr/local/emhttp/plugins/harmraid-push/webGui
       rm -f /usr/local/emhttp/plugins/harmraid-push/register.php
+      rm -f /usr/local/emhttp/plugins/harmraid-push/api.php
+      rm -f /usr/local/emhttp/plugins/harmraid-push/harmraid-push.page
       rm -f /usr/local/emhttp/plugins/harmraid-push/event/notify
       rm -f /boot/config/plugins/harmraid-push/event/notify
       rm -f /usr/local/emhttp/plugins/harmraid-push/scripts/poll-register.sh
-      # Ensure scripts are executable
-      chmod +x /usr/local/emhttp/plugins/harmraid-push/send-push.sh 2>/dev/null || true
-      # Remove deprecated push_token.txt (now using devices.json only)
       rm -f /boot/config/plugins/harmraid-push/push_token.txt
+      rm -f /boot/config/plugins/harmraid-push/devices.json
+      rm -f /boot/config/plugins/harmraid-push/token.txt
+
+      chmod +x /usr/local/emhttp/plugins/harmraid-push/send-push.sh 2>/dev/null || true
     ]]>
   </INSTALL>
   <FILE Run="/bin/bash" Method="remove">

@@ -1,17 +1,44 @@
 #!/bin/bash
 # Harmraid Push - 发送通知到 HarmonyOS 设备 (V3 JWT API)
-# 由 event/notify 钩子调用
+# 由 Dynamix Notification Agent 调用
 
 readonly CONFIG_DIR="/boot/config/plugins/harmraid-push"
 readonly SA_FILE="${CONFIG_DIR}/service-account.json"
 readonly SA_ENC_FILE="${CONFIG_DIR}/service-account.json.enc"
 readonly TMPKEY="/tmp/harmraid-push-key.pem"
 readonly SA_TMP="/dev/shm/service-account.json"
+readonly TOKEN_FILE="${CONFIG_DIR}/token.txt"
 
 TITLE="${1:-Harmraid 通知}"
 CONTENT="${2:-${1}}"
 CONTENT="${CONTENT:-无内容}"
 SEVERITY="${3:-INFO}"
+
+# severity emoji 前缀
+case "${SEVERITY,,}" in
+  alert)   PREFIX="🔴 ";;
+  warning) PREFIX="🟡 ";;
+  *)       PREFIX="";;
+esac
+TITLE="${PREFIX}${TITLE}"
+
+# urgency 映射
+case "${SEVERITY,,}" in
+  alert|warning) URGENCY="HIGH";;
+  *)            URGENCY="NORMAL";;
+esac
+
+# 读取推送令牌（优先 $4，降级 token.txt）
+if [ -n "$4" ]; then
+  TOKEN="$4"
+elif [ -f "$TOKEN_FILE" ]; then
+  TOKEN=$(cat "$TOKEN_FILE" | tr -d '[:space:]')
+fi
+
+if [ -z "$TOKEN" ]; then
+  logger -t harmraid-push "No push token"
+  exit 0
+fi
 
 # 解密服务账号密钥（优先 .enc，降级 .json）
 if [ -f "$SA_ENC_FILE" ]; then
@@ -29,7 +56,6 @@ else
   logger -t harmraid-push "No service account key"
   exit 1
 fi
-[ ! -f "$CONFIG_DIR/devices.json" ] && exit 0
 
 # 解析服务账号密钥
 PROJECT_ID=$(echo "$SA_JSON" | jq -r '.project_id')
@@ -38,10 +64,6 @@ PRIVATE_KEY=$(echo "$SA_JSON" | jq -r '.private_key')
 SUB_ACCOUNT=$(echo "$SA_JSON" | jq -r '.sub_account')
 
 [ -z "$PROJECT_ID" ] && logger -t harmraid-push "Invalid service-account.json" && exit 1
-
-# 从 devices.json 读取所有推送 token
-TOKENS=$(jq '[.[].token]' "$CONFIG_DIR/devices.json" 2>/dev/null)
-[ -z "$TOKENS" ] || [ "$TOKENS" = "[]" ] && exit 0
 
 # 生成 JWT
 NOW=$(date +%s)
@@ -59,7 +81,7 @@ rm -f "$TMPKEY"
 
 JWT="${B64_H}.${B64_P}.${SIGN}"
 
-# V3 批量发送推送
+# 发送推送
 PAYLOAD_FILE="/tmp/harmraid-push-payload.json"
 cat > "$PAYLOAD_FILE" << EOFJSON
 {
@@ -68,13 +90,14 @@ cat > "$PAYLOAD_FILE" << EOFJSON
       "category": "DEVICE_REMINDER",
       "title": "${TITLE}",
       "body": "${CONTENT}",
+      "urgency": "${URGENCY}",
       "clickAction": { "actionType": 0 },
       "foregroundShow": true
     },
     "data": "{\"title\":\"${TITLE}\",\"content\":\"${CONTENT}\",\"severity\":\"${SEVERITY}\"}"
   },
   "target": {
-    "token": ${TOKENS}
+    "token": ["${TOKEN}"]
   },
   "pushOptions": {
     "ttl": 86400

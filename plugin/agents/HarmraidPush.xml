@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Agent>
   <Name>HarmraidPush</Name>
-  <Variables/>
+  <Variables>
+    <Variable Help="在 Harmraid App → 通知设置中复制推送令牌" Desc="推送令牌" Default="">HARMRAID_TOKEN</Variable>
+  </Variables>
   <Script>
     <![CDATA[
       #!/bin/bash
       ############
       {0}
       ############
-      bash /usr/local/emhttp/plugins/harmraid-push/send-push.sh "$SUBJECT" "$DESCRIPTION" "$IMPORTANCE"
+      echo "$HARMRAID_TOKEN" > /boot/config/plugins/harmraid-push/token.txt
+      bash /usr/local/emhttp/plugins/harmraid-push/send-push.sh "$SUBJECT" "$DESCRIPTION" "$IMPORTANCE" "$HARMRAID_TOKEN"
     ]]>
   </Script>
 </Agent>
