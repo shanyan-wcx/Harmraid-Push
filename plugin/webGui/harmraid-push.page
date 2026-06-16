@@ -7,10 +7,9 @@ $configDir = '/boot/config/plugins/harmraid-push';
 $pushTypes = trim(@file_get_contents("$configDir/types.txt")) ?: 'alert,warning,info';
 $deviceAdded = '';
 
-if ($_REQUEST['action'] === 'save') {
+if ($_REQUEST['cmd'] === 'save') {
   if (!is_dir($configDir)) { mkdir($configDir, 0755, true); }
 
-  // Handle device addition
   if (isset($_GET['add_device'])) {
     $token = trim($_GET['push_token'] ?? '');
     if ($token) {
@@ -20,7 +19,6 @@ if ($_REQUEST['action'] === 'save') {
       if ($devicesJson) { $devices = json_decode($devicesJson, true) ?? []; }
       $devices[] = ['token' => $token, 'device_name' => $deviceName];
       file_put_contents("$configDir/devices.json", json_encode($devices));
-      // Rebuild push_token.txt from devices.json
       $allTokens = array_map(fn($d) => $d['token'], $devices);
       file_put_contents("$configDir/push_token.txt", implode("\n", $allTokens) . "\n");
       exec('/usr/local/emhttp/plugins/harmraid-push/send-push.sh "设备注册成功" "设备 ' . $deviceName . ' 已注册" "info" >/dev/null 2>&1');
@@ -28,7 +26,6 @@ if ($_REQUEST['action'] === 'save') {
     }
   }
 
-  // Handle device deletion by index
   if (isset($_GET['delete_idx'])) {
     $delIdx = intval($_GET['delete_idx']);
     $devices = [];
@@ -42,7 +39,6 @@ if ($_REQUEST['action'] === 'save') {
     }
   }
 
-  // Save notification types
   $types = [];
   foreach (['alert', 'warning', 'info'] as $t) {
     if (isset($_GET['type_' . $t]) && $_GET['type_' . $t] === $t) { $types[] = $t; }
@@ -53,16 +49,22 @@ if ($_REQUEST['action'] === 'save') {
   $saved = true;
 }
 
-if ($_GET['format'] === 'json') {
-  header('Content-Type: application/json');
+if ($_GET['cmd'] === 'test_push') {
+  header('Content-Type: text/plain; charset=utf-8');
   $devicesJson = @file_get_contents("$configDir/devices.json");
   $devices = $devicesJson ? json_decode($devicesJson, true) : [];
-  echo json_encode([
-    'installed' => true,     'version' => '1.0.10',
-    'pushTypes' => $pushTypes,
-    'hasCredentials' => count($devices) > 0, 'configStatus' => 'configured',
-    'deviceCount' => count($devices), 'devices' => $devices
-  ]);
+  if (count($devices) === 0) {
+    echo "无设备已注册，无法发送测试通知\n";
+    exit;
+  }
+  $output = [];
+  exec('/usr/local/emhttp/plugins/harmraid-push/send-push.sh "测试通知" "这是一条来自 Harmraid Push 的测试通知" "info" 2>&1', $output, $code);
+  echo implode("\n", $output) . "\n";
+  if ($code === 0) {
+    echo "测试通知发送完成\n";
+  } else {
+    echo "发送失败（退出码: $code）\n";
+  }
   exit;
 }
 ?>
@@ -74,7 +76,7 @@ if ($_GET['format'] === 'json') {
 <hr>
 
 <form method="GET">
-<input type="hidden" name="action" value="save">
+<input type="hidden" name="cmd" value="save">
 <h3>通知类型</h3>
 <?php foreach (['alert' => '错误 (Alert)', 'warning' => '警告 (Warning)', 'info' => '普通通知 (Info)'] as $k => $v): ?>
 <input type="hidden" name="type_<?=$k?>" value="">
@@ -91,7 +93,7 @@ if ($_GET['format'] === 'json') {
 <p style="color:#27ae60;">✅ 设备 "<?=$deviceAdded?>" 已添加，测试推送已发送</p>
 <?php endif; ?>
 <form method="GET">
-<input type="hidden" name="action" value="save">
+<input type="hidden" name="cmd" value="save">
 <input type="hidden" name="add_device" value="1">
 设备名称（可选）: <input type="text" name="device_name" style="width:200px;"><br><br>
 推送令牌: <input type="text" name="push_token" required style="width:400px;"><br><br>
@@ -123,7 +125,7 @@ echo count($devices);
   </td>
   <td style="padding:6px 4px;">
     <form method="GET" style="display:inline;">
-    <input type="hidden" name="action" value="save">
+    <input type="hidden" name="cmd" value="save">
     <input type="hidden" name="delete_idx" value="<?=$idx?>">
     <button type="submit" style="background:none;border:none;color:#c00;cursor:pointer;font-size:12px;padding:0;" onclick="return confirm('确认删除此设备？')">删除</button>
     </form>
@@ -149,3 +151,29 @@ function toggleToken(btn) {
 <?php else: ?>
 <p style="color:#888;margin-top:4px;">无推送令牌</p>
 <?php endif; ?>
+
+<hr>
+
+<h3>发送测试通知</h3>
+<button onclick="sendTestPush()" style="background:#27ae60;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:14px;">📤 发送测试通知</button>
+<div id="push-log" style="margin-top:10px;max-height:200px;overflow:auto;font-size:11px;background:#1e1e1e;color:#d4d4d4;padding:10px;border-radius:6px;font-family:monospace;display:none;"></div>
+<script>
+function sendTestPush() {
+  var log = document.getElementById('push-log');
+  log.style.display = 'block';
+  log.textContent = '发送中...\n';
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '?cmd=test_push');
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      log.textContent = xhr.responseText;
+    } else {
+      log.textContent = '请求失败 (HTTP ' + xhr.status + ')\n';
+    }
+  };
+  xhr.onerror = function() {
+    log.textContent = '网络错误\n';
+  };
+  xhr.send();
+}
+</script>
