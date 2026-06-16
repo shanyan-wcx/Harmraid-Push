@@ -1,13 +1,13 @@
 #!/bin/bash
-# Harmraid Push - 发送通知到 HarmonyOS 设备
-# 由 event/notify 钩子调用，无需手动执行
+# Harmraid Push - 发送通知到 HarmonyOS 设备 (V3 JWT API)
+# 由 event/notify 钩子调用
 
 readonly CONFIG_DIR="/boot/config/plugins/harmraid-push"
 readonly PUSH_ENABLED_FILE="${CONFIG_DIR}/push_enabled.txt"
 readonly TYPES_FILE="${CONFIG_DIR}/types.txt"
 readonly TOKEN_FILE="${CONFIG_DIR}/push_token.txt"
-readonly APP_ID_FILE="${CONFIG_DIR}/client_id.txt"
-readonly APP_SECRET_FILE="${CONFIG_DIR}/client_secret.txt"
+readonly SA_FILE="${CONFIG_DIR}/service-account.json"
+readonly TMPKEY="/tmp/harmraid-push-key.pem"
 
 TITLE="${1:-Harmraid 通知}"
 CONTENT="${2:-}"
@@ -15,60 +15,87 @@ SEVERITY="${3:-info}"
 
 # 检查推送是否启用
 push_enabled=$(cat "$PUSH_ENABLED_FILE" 2>/dev/null || echo "false")
-if [ "$push_enabled" != "true" ]; then
-  exit 0
-fi
+[ "$push_enabled" != "true" ] && exit 0
 
-# 检查通知类型是否匹配
+# 检查通知类型
 allowed_types=$(cat "$TYPES_FILE" 2>/dev/null || echo "alert,warning,info")
-if ! echo "$allowed_types" | grep -q "$SEVERITY"; then
-  exit 0
-fi
+echo "$allowed_types" | grep -q "$SEVERITY" || exit 0
 
-# 检查令牌和凭证
-if [ ! -f "$TOKEN_FILE" ] || [ ! -f "$APP_ID_FILE" ] || [ ! -f "$APP_SECRET_FILE" ]; then
-  logger -t harmraid-push "Push not configured: missing token or credentials"
-  exit 1
-fi
+# 检查服务账号密钥
+[ ! -f "$SA_FILE" ] && logger -t harmraid-push "service-account.json not found" && exit 1
+[ ! -f "$TOKEN_FILE" ] && exit 0
 
-TOKEN=$(cat "$TOKEN_FILE")
-APP_ID=$(cat "$APP_ID_FILE")
-APP_SECRET=$(cat "$APP_SECRET_FILE")
+# 解析服务账号密钥
+SA_JSON=$(cat "$SA_FILE")
+PROJECT_ID=$(echo "$SA_JSON" | jq -r '.project_id')
+KEY_ID=$(echo "$SA_JSON" | jq -r '.key_id')
+PRIVATE_KEY=$(echo "$SA_JSON" | jq -r '.private_key')
+SUB_ACCOUNT=$(echo "$SA_JSON" | jq -r '.sub_account')
+TOKEN_URI=$(echo "$SA_JSON" | jq -r '.token_uri')
 
-# 获取 HMS OAuth 令牌
-AUTH_RESPONSE=$(curl -s -X POST \
-  "https://oauth-login.cloud.huawei.com/oauth2/v3/token" \
+[ -z "$PROJECT_ID" ] && logger -t harmraid-push "Invalid service-account.json" && exit 1
+
+# 生成 JWT
+NOW=$(date +%s)
+EXP=$((NOW + 3600))
+
+HEADER="{\"alg\":\"RS256\",\"typ\":\"JWT\",\"kid\":\"${KEY_ID}\"}"
+PAYLOAD="{\"iss\":\"${SUB_ACCOUNT}\",\"aud\":\"https://oauth-login.cloud.huawei.com/oauth2/v3/token\",\"exp\":${EXP},\"iat\":${NOW}}"
+
+B64_H=$(echo -n "$HEADER" | openssl base64 -e | tr -d '\n=' | tr '+/' '-_')
+B64_P=$(echo -n "$PAYLOAD" | openssl base64 -e | tr -d '\n=' | tr '+/' '-_')
+
+echo "$PRIVATE_KEY" > "$TMPKEY"
+SIGN=$(echo -n "${B64_H}.${B64_P}" | openssl dgst -sha256 -sign "$TMPKEY" | openssl base64 -e | tr -d '\n=' | tr '+/' '-_')
+rm -f "$TMPKEY"
+
+JWT="${B64_H}.${B64_P}.${SIGN}"
+
+# 换取 access token
+TOKEN_RESP=$(curl -s -X POST "$TOKEN_URI" \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=client_credentials&client_id=${APP_ID}&client_secret=${APP_SECRET}")
+  -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${JWT}")
 
-AUTH_TOKEN=$(echo "$AUTH_RESPONSE" | jq -r '.access_token' 2>/dev/null)
+ACCESS_TOKEN=$(echo "$TOKEN_RESP" | jq -r '.access_token')
 
-if [ -z "$AUTH_TOKEN" ] || [ "$AUTH_TOKEN" = "null" ]; then
-  logger -t harmraid-push "Failed to get HMS OAuth token"
+if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" = "null" ]; then
+  logger -t harmraid-push "Failed to get access token: $(echo $TOKEN_RESP | jq -r '.error_description')"
   exit 1
 fi
 
-# 遍历所有 token 逐条发送
-while IFS= read -r token_line; do
-  [ -z "$token_line" ] && continue
-  TOKEN=$(echo "$token_line" | tr -d '[:space:]')
-  [ -z "$TOKEN" ] && continue
+# 读取所有推送 token（去空行、去重）
+TOKENS=$(jq -R -s '[split("\n")[] | select(length > 0)] | unique' "$TOKEN_FILE" 2>/dev/null)
+[ -z "$TOKENS" ] || [ "$TOKENS" = "[]" ] && exit 0
 
-  curl -s -X POST \
-    "https://push-api.cloud.huawei.com/v1/${APP_ID}/messages:send" \
-    -H "Authorization: Bearer ${AUTH_TOKEN}" \
-    -H "Content-Type: application/json" \
-    -d "$(cat <<EOF
+# V3 批量发送推送
+RESP=$(curl -s -X POST \
+  "https://push-api.cloud.huawei.com/v3/${PROJECT_ID}/messages:send" \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -H "push-type: 0" \
+  -d "$(cat <<EOF
 {
-  "message": {
-    "token": ["${TOKEN}"],
+  "payload": {
     "notification": {
+      "category": "MARKETING",
       "title": "${TITLE}",
-      "body": "${CONTENT}"
+      "body": "${CONTENT}",
+      "clickAction": {
+        "actionType": 0
+      },
+      "foregroundShow": true
     },
-    "data": "{\"title\":\"${TITLE}\",\"content\":\"${CONTENT}\",\"severity\":\"${SEVERITY}\"}"
+    "data": "{\\\"title\\\":\\\"${TITLE}\\\",\\\"content\\\":\\\"${CONTENT}\\\",\\\"severity\\\":\\\"${SEVERITY}\\\"}"
+  },
+  "target": {
+    "token": ${TOKENS}
+  },
+  "pushOptions": {
+    "testMessage": true,
+    "ttl": 86400
   }
 }
 EOF
 )"
-done < "$TOKEN_FILE"
+
+logger -t harmraid-push "Push sent: ${TITLE} (${SEVERITY}) - $(echo $RESP | jq -c '.msg // .code')"

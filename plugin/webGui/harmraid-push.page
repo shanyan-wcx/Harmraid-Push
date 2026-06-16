@@ -13,12 +13,13 @@ $deviceCount = count($tokenLines);
 
 if ($_GET['action'] === 'register') {
   $t = $_GET['token'] ?? '';
-  $clientId = $_GET['client_id'] ?? '';
-  $clientSecret = $_GET['client_secret'] ?? '';
+  $saRaw = $_GET['service_account'] ?? '';
   if ($t) {
     file_put_contents("$configDir/push_token.txt", $t . "\n", FILE_APPEND | LOCK_EX);
-    if ($clientId) { file_put_contents("$configDir/client_id.txt", $clientId); }
-    if ($clientSecret) { file_put_contents("$configDir/client_secret.txt", $clientSecret); }
+    if ($saRaw) {
+      $saDecoded = urldecode($saRaw);
+      file_put_contents("$configDir/service-account.json", $saDecoded);
+    }
     echo '{"status":"ok"}';
   } else {
     echo '{"status":"error","message":"Missing token"}';
