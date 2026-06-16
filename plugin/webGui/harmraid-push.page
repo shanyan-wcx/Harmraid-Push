@@ -115,11 +115,11 @@ echo count($devices);
 <tr style="border-bottom:1px solid #eee;">
   <td style="padding:6px 4px;font-size:13px;"><?=htmlspecialchars($d['device_name'])?></td>
   <td style="padding:6px 4px;white-space:nowrap;">
-    <span class="token-wrap" data-token="<?=htmlspecialchars($d['token'])?>"
+    <span class="token-wrap" data-token="<?=htmlspecialchars($d['token'])?>" data-prefix="<?=htmlspecialchars(substr($d['token'],0,8))?>"
           style="font-size:11px;color:#666;font-family:monospace;">
-      <?=str_repeat('*', strlen($d['token']))?>
+      <?=htmlspecialchars(substr($d['token'],0,8))?>
     </span>
-    <button onclick="toggleToken(this)" style="background:none;border:none;cursor:pointer;font-size:14px;vertical-align:middle;">&#x1F441;</button>
+    <button onclick="toggleToken(this)" style="background:none;border:none;cursor:pointer;font-size:14px;vertical-align:middle;">👁️‍🗨️</button>
   </td>
   <td style="padding:6px 4px;">
     <form method="GET" style="display:inline;">
@@ -135,13 +135,14 @@ echo count($devices);
 function toggleToken(btn) {
   var wrap = btn.parentElement.querySelector('.token-wrap');
   var full = wrap.dataset.token || '';
+  var prefix = wrap.dataset.prefix || '';
   if (!full) return;
   if (wrap.textContent === full) {
-    wrap.textContent = '*'.repeat(full.length);
-    btn.textContent = '\u{1F441}';
+    wrap.textContent = prefix;
+    btn.textContent = '\u{1F441}\u{FE0F}\u{200D}\u{1F5E8}\u{FE0F}';
   } else {
     wrap.textContent = full;
-    btn.textContent = '\u{1F441}\u{FE0F}\u{200D}\u{1F5E8}\u{FE0F}';
+    btn.textContent = '\u{1F441}';
   }
 }
 </script>
