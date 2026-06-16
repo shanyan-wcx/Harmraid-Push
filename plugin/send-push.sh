@@ -73,21 +73,15 @@ TOKENS=$(jq -R -s '[split("\n")[] | select(length > 0)] | unique' "$TOKEN_FILE" 
 [ -z "$TOKENS" ] || [ "$TOKENS" = "[]" ] && exit 0
 
 # V3 批量发送推送
-RESP=$(curl -s -X POST \
-  "https://push-api.cloud.huawei.com/v3/${PROJECT_ID}/messages:send" \
-  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -H "push-type: 0" \
-  -d "$(cat <<EOF
+PAYLOAD_FILE="/tmp/harmraid-push-payload.json"
+cat > "$PAYLOAD_FILE" << EOFJSON
 {
   "payload": {
     "notification": {
       "category": "DEVICE_REMINDER",
       "title": "${TITLE}",
       "body": "${CONTENT}",
-      "clickAction": {
-        "actionType": 0
-      },
+      "clickAction": { "actionType": 0 },
       "foregroundShow": true
     },
     "data": "{\"title\":\"${TITLE}\",\"content\":\"${CONTENT}\",\"severity\":\"${SEVERITY}\"}"
@@ -99,8 +93,16 @@ RESP=$(curl -s -X POST \
     "ttl": 86400
   }
 }
-EOF
-)"
+EOFJSON
+
+RESP=$(curl -s -X POST \
+  "https://push-api.cloud.huawei.com/v3/${PROJECT_ID}/messages:send" \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -H "push-type: 0" \
+  -d @"$PAYLOAD_FILE")
+
+rm -f "$PAYLOAD_FILE"
 
 echo "HMS response: $(echo $RESP | jq -c '.code // .msg // "unknown"')"
 logger -t harmraid-push "Push sent: ${TITLE} (${SEVERITY}) - $(echo $RESP | jq -c '.msg // .code')"
