@@ -57,7 +57,7 @@ if ($_GET['format'] === 'json') {
   header('Content-Type: application/json');
   echo json_encode([
     'installed' => true,
-    'version' => '1.0.4',
+    'version' => '1.0.5',
     'pushEnabled' => $pushEnabled === 'true',
     'pushTypes' => $pushTypes,
     'hasCredentials' => $deviceCount > 0,
