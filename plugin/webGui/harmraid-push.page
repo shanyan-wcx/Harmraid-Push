@@ -69,6 +69,22 @@ echo count($devices);
 <button onclick="sendTestPush()" class="button">📤 发送测试通知</button>
 <div id="push-log" style="margin-top:10px;max-height:200px;overflow:auto;font-size:11px;background:#1e1e1e;color:#d4d4d4;padding:10px;border-radius:6px;font-family:monospace;display:none;"></div>
 
+<h3>添加设备日志</h3>
+<?php
+$logFile = "$configDir/add_device.log";
+if (file_exists($logFile)) {
+  $log = json_decode(file_get_contents($logFile), true);
+  echo '<p style="font-size:12px;color:#888;">退出码: ' . $log['code'] . ' | 时间: ' . date('H:i:s', $log['time']) . '</p>';
+  if (!empty($log['output'])) {
+    echo '<pre style="max-height:150px;overflow:auto;font-size:11px;background:#1e1e1e;color:#d4d4d4;padding:8px;border-radius:4px;">';
+    echo htmlspecialchars(implode("\n", $log['output']));
+    echo '</pre>';
+  }
+} else {
+  echo '<p style="color:#888;font-size:12px;">暂无设备添加记录</p>';
+}
+?>
+
 <script>
 function apiCall(cmd, extra, cb) {
   var url = '/plugins/harmraid-push/api.php?cmd=' + cmd + '&' + extra;
