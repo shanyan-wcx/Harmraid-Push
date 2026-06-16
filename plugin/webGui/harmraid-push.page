@@ -22,7 +22,7 @@ if ($_REQUEST['cmd'] === 'save') {
       file_put_contents("$configDir/push_token.txt", implode("\n", $allTokens) . "\n");
       exec('/usr/local/emhttp/plugins/harmraid-push/send-push.sh "设备注册成功" "设备 ' . $deviceName . ' 已注册" "info" >/dev/null 2>&1');
     }
-    header('Location: /plugins/harmraid-push/harmraid-push.page?msg=added');
+    echo '<script>window.location.href="/plugins/harmraid-push/harmraid-push.page?msg=added";</script>';
     exit;
   }
 
@@ -37,7 +37,7 @@ if ($_REQUEST['cmd'] === 'save') {
       $allTokens = array_map(fn($d) => $d['token'], $devices);
       file_put_contents("$configDir/push_token.txt", implode("\n", $allTokens) . "\n");
     }
-    header('Location: /plugins/harmraid-push/harmraid-push.page');
+    echo '<script>window.location.href="/plugins/harmraid-push/harmraid-push.page";</script>';
     exit;
   }
 
@@ -48,7 +48,7 @@ if ($_REQUEST['cmd'] === 'save') {
   $pushTypes = implode(',', $types);
   file_put_contents("$configDir/types.txt", $pushTypes);
   $pushTypes = trim(@file_get_contents("$configDir/types.txt")) ?: 'alert,warning,info';
-  header('Location: /plugins/harmraid-push/harmraid-push.page?msg=saved');
+  echo '<script>window.location.href="/plugins/harmraid-push/harmraid-push.page?msg=saved";</script>';
   exit;
 }
 ?>
