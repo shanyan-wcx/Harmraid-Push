@@ -77,9 +77,17 @@ if (file_exists($logFile)) {
   $lines = [];
   $lines[] = '退出码: ' . $log['code'];
   $lines[] = '时间: ' . date('H:i:s', $log['time']);
+  $resultMsg = '';
   if (!empty($log['output'])) {
-    foreach ($log['output'] as $l) { $lines[] = $l; }
+    foreach ($log['output'] as $l) {
+      if (preg_match('/"80000000"/', $l)) {
+        $resultMsg = '✅ 推送成功';
+      } elseif (preg_match('/"(\d+)"/', $l, $m)) {
+        $resultMsg = '❌ 发送失败（错误码: ' . $m[1] . '）';
+      }
+    }
   }
+  if ($resultMsg) { $lines[] = $resultMsg; }
   echo '<pre style="margin-top:10px;max-height:200px;overflow:auto;font-size:11px;background:#1e1e1e;color:#d4d4d4;padding:10px;border-radius:6px;border:1px solid #333;font-family:monospace;">';
   echo htmlspecialchars(implode("\n", $lines));
   echo '</pre>';
