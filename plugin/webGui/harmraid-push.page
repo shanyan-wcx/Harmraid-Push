@@ -18,6 +18,7 @@ $pushTypes = trim(@file_get_contents("$configDir/types.txt")) ?: 'alert,warning,
 <input type="hidden" id="type_<?=$k?>" value="">
 <label><input type="checkbox" id="cb_<?=$k?>" value="<?=$k?>" <?=strpos($pushTypes, $k) !== false ? 'checked' : ''?> onchange="saveTypes()"> <?=$v?></label><br>
 <?php endforeach; ?><br>
+<button onclick="saveTypes()" style="background:#e67e22;color:white;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px;">保存设置</button>
 
 <hr>
 
