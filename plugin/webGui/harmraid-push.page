@@ -14,7 +14,7 @@ $pushTypes = trim(@file_get_contents("$configDir/types.txt")) ?: 'ALERT,WARNING,
 <hr>
 
 <h3>通知类型</h3>
-<?php foreach (['ALERT' => '错误 (Alert)', 'WARNING' => '警告 (Warning)', 'INFO' => '普通通知 (Info)'] as $k => $v): ?>
+<?php foreach (['ALERT' => '错误 (Alert)', 'WARNING' => '警告 (Warning)', 'INFO' => '普通 (Info)'] as $k => $v): ?>
 <input type="hidden" id="type_<?=$k?>" value="">
 <label><input type="checkbox" id="cb_<?=$k?>" value="<?=$k?>" <?=strpos($pushTypes, $k) !== false ? 'checked' : ''?>> <?=$v?></label><br>
 <?php endforeach; ?><br>

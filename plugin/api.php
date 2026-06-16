@@ -57,23 +57,23 @@ if ($_GET['cmd'] === 'test_push') {
   $devicesJson = @file_get_contents("$configDir/devices.json");
   $devices = $devicesJson ? json_decode($devicesJson, true) : [];
   if (count($devices) === 0) {
-    echo "无设备已注册，无法发送测试通知\n";
+    echo "❌ 无设备已注册，无法发送测试通知\n";
     exit;
   }
   $pushScript = '/usr/local/emhttp/plugins/harmraid-push/send-push.sh';
   if (!file_exists($pushScript)) {
-    echo "错误: send-push.sh 不存在\n";
+    echo "❌ send-push.sh 不存在\n";
     exit;
   }
   @chmod($pushScript, 0755);
   $output = [];
-  $cmd = $pushScript . ' "测试通知" "这是一条测试通知" "INFO" 2>&1';
-  echo "执行命令: $cmd\n";
-  exec($cmd, $output, $code);
-  echo "退出码: " . var_export($code, true) . "\n";
-  echo "输出行数: " . count($output) . "\n";
-  foreach ($output as $line) {
-    echo "  > " . $line . "\n";
+  exec($pushScript . ' "测试通知" "这是一条测试通知" "INFO" 2>&1', $output, $code);
+  $lastLine = count($output) > 0 ? end($output) : '';
+  if ($code === 0 && preg_match('/80000000/', $lastLine)) {
+    echo "✅ 推送成功\n";
+  } else {
+    echo "❌ 发送失败\n";
+    foreach ($output as $line) { echo "  $line\n"; }
   }
   exit;
 }
