@@ -44,14 +44,14 @@ TOKEN_URI=$(echo "$SA_JSON" | jq -r '.token_uri')
 NOW=$(date +%s)
 EXP=$((NOW + 3600))
 
-HEADER="{\"alg\":\"RS256\",\"typ\":\"JWT\",\"kid\":\"${KEY_ID}\"}"
+HEADER="{\"alg\":\"PS256\",\"typ\":\"JWT\",\"kid\":\"${KEY_ID}\"}"
 PAYLOAD="{\"iss\":\"${SUB_ACCOUNT}\",\"aud\":\"https://oauth-login.cloud.huawei.com/oauth2/v3/token\",\"exp\":${EXP},\"iat\":${NOW}}"
 
 B64_H=$(echo -n "$HEADER" | openssl base64 -e | tr -d '\n=' | tr '+/' '-_')
 B64_P=$(echo -n "$PAYLOAD" | openssl base64 -e | tr -d '\n=' | tr '+/' '-_')
 
 echo "$PRIVATE_KEY" > "$TMPKEY"
-SIGN=$(echo -n "${B64_H}.${B64_P}" | openssl dgst -sha256 -sign "$TMPKEY" | openssl base64 -e | tr -d '\n=' | tr '+/' '-_')
+SIGN=$(echo -n "${B64_H}.${B64_P}" | openssl dgst -sha256 -sigopt rsa_padding_mode:pss -sigopt rsa_pss_saltlen:-1 -sign "$TMPKEY" | openssl base64 -e | tr -d '\n=' | tr '+/' '-_')
 rm -f "$TMPKEY"
 
 JWT="${B64_H}.${B64_P}.${SIGN}"
