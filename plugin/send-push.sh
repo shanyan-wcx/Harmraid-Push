@@ -18,7 +18,7 @@ SEVERITY="${3:-INFO}"
 case "${SEVERITY,,}" in
   alert)   PREFIX="🔴 ";;
   warning) PREFIX="🟡 ";;
-  *)       PREFIX="";;
+  *)       PREFIX="🟢 ";;
 esac
 TITLE="${PREFIX}${TITLE}"
 
