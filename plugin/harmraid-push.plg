@@ -71,11 +71,12 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
           sleep 1
           RESULT=$(curl -s http://localhost/graphql \
             -H "Content-Type: application/json" \
-            -d '{"query":"{ notifications { list(filter: UNREAD) { id subject description } } }"}')
+            -d '{"query":"{ notifications { list(filter: { type: UNREAD, offset: 0, limit: 50 }) { id subject description importance } } }"}')
           REG_ID=$(echo "$RESULT" | jq -r '.data.notifications.list[] | select(.subject == "HARMRAID_PUSH_REGISTER") | .id' | head -1)
           [ -z "$REG_ID" ] && continue
-          TOKEN=$(echo "$RESULT" | jq -r ".data.notifications.list[] | select(.id == \"$REG_ID\") | .description" | jq -r '.token')
-          DEVICE=$(echo "$RESULT" | jq -r ".data.notifications.list[] | select(.id == \"$REG_ID\") | .description" | jq -r '.device_name / ""')
+          DESC=$(echo "$RESULT" | jq -r ".data.notifications.list[] | select(.id == \"$REG_ID\") | .description")
+          TOKEN=$(echo "$DESC" | jq -r '.token // empty')
+          DEVICE=$(echo "$DESC" | jq -r '.device_name // empty')
           [ -z "$TOKEN" ] && continue
           mkdir -p /boot/config/plugins/harmraid-push
           echo "$TOKEN" >> /boot/config/plugins/harmraid-push/push_token.txt
