@@ -5,14 +5,16 @@ Title="Harmraid-Push"
 <?php
 $configDir = '/boot/config/plugins/harmraid-push';
 $pushTypes = trim(@file_get_contents("$configDir/types.txt")) ?: 'alert,warning,info';
+$msg = '';
 
-if ($_REQUEST['cmd'] === 'save') {
+if ($_POST['cmd'] === 'save') {
   if (!is_dir($configDir)) { mkdir($configDir, 0755, true); }
 
-  if (isset($_GET['add_device'])) {
-    $token = trim($_GET['push_token'] ?? '');
+  // Add device
+  if (isset($_POST['add_device'])) {
+    $token = trim($_POST['push_token'] ?? '');
     if ($token) {
-      $deviceName = trim($_GET['device_name'] ?? '') ?: '未命名设备';
+      $deviceName = trim($_POST['device_name'] ?? '') ?: '未命名设备';
       $devices = [];
       $devicesJson = @file_get_contents("$configDir/devices.json");
       if ($devicesJson) { $devices = json_decode($devicesJson, true) ?? []; }
@@ -21,13 +23,13 @@ if ($_REQUEST['cmd'] === 'save') {
       $allTokens = array_map(fn($d) => $d['token'], $devices);
       file_put_contents("$configDir/push_token.txt", implode("\n", $allTokens) . "\n");
       exec('/usr/local/emhttp/plugins/harmraid-push/send-push.sh "设备注册成功" "设备 ' . $deviceName . ' 已注册" "info" >/dev/null 2>&1');
+      $msg = 'added';
     }
-    echo '<script>window.location.href="/plugins/harmraid-push/harmraid-push.page?msg=added";</script>';
-    exit;
   }
 
-  if (isset($_GET['delete_idx'])) {
-    $delIdx = intval($_GET['delete_idx']);
+  // Delete device by index
+  if (isset($_POST['delete_idx'])) {
+    $delIdx = intval($_POST['delete_idx']);
     $devices = [];
     $devicesJson = @file_get_contents("$configDir/devices.json");
     if ($devicesJson) { $devices = json_decode($devicesJson, true) ?? []; }
@@ -37,19 +39,17 @@ if ($_REQUEST['cmd'] === 'save') {
       $allTokens = array_map(fn($d) => $d['token'], $devices);
       file_put_contents("$configDir/push_token.txt", implode("\n", $allTokens) . "\n");
     }
-    echo '<script>window.location.href="/plugins/harmraid-push/harmraid-push.page";</script>';
-    exit;
   }
 
+  // Save notification types
   $types = [];
   foreach (['alert', 'warning', 'info'] as $t) {
-    if (isset($_GET['type_' . $t]) && $_GET['type_' . $t] === $t) { $types[] = $t; }
+    if (isset($_POST['type_' . $t]) && $_POST['type_' . $t] === $t) { $types[] = $t; }
   }
   $pushTypes = implode(',', $types);
   file_put_contents("$configDir/types.txt", $pushTypes);
   $pushTypes = trim(@file_get_contents("$configDir/types.txt")) ?: 'alert,warning,info';
-  echo '<script>window.location.href="/plugins/harmraid-push/harmraid-push.page?msg=saved";</script>';
-  exit;
+  if (!$msg) { $msg = 'saved'; }
 }
 ?>
 <link rel="stylesheet" href="/webGui/styles/default.css">
@@ -59,7 +59,10 @@ if ($_REQUEST['cmd'] === 'save') {
 <p>Harmraid 应用的 Unraid 推送通知插件。</p>
 <hr>
 
-<form method="GET">
+<?php if ($msg === 'saved'): ?><p style="color:#27ae60;">✅ 已保存</p><?php endif; ?>
+<?php if ($msg === 'added'): ?><p style="color:#27ae60;">✅ 设备已添加，测试推送已发送</p><?php endif; ?>
+
+<form method="POST">
 <input type="hidden" name="cmd" value="save">
 <h3>通知类型</h3>
 <?php foreach (['alert' => '错误 (Alert)', 'warning' => '警告 (Warning)', 'info' => '普通通知 (Info)'] as $k => $v): ?>
@@ -67,17 +70,12 @@ if ($_REQUEST['cmd'] === 'save') {
 <label><input type="checkbox" name="type_<?=$k?>" value="<?=$k?>" <?=strpos($pushTypes, $k) !== false ? 'checked' : ''?>> <?=$v?></label><br>
 <?php endforeach; ?><br>
 <input type="submit" value="保存设置" class="button">
-<?php if ($_GET['msg'] === 'saved'): ?><p style="color:#27ae60;">✅ 已保存</p><?php endif; ?>
-<?php if ($_GET['msg'] === 'added'): ?><p style="color:#27ae60;">✅ 设备已添加</p><?php endif; ?>
 </form>
 
 <hr>
 
 <h3>设备管理</h3>
-<?php if ($_GET['msg'] === 'added'): ?>
-<p style="color:#27ae60;">✅ 设备已添加，测试推送已发送</p>
-<?php endif; ?>
-<form method="GET">
+<form method="POST">
 <input type="hidden" name="cmd" value="save">
 <input type="hidden" name="add_device" value="1">
 设备名称（可选）: <input type="text" name="device_name" style="width:200px;"><br><br>
@@ -109,7 +107,7 @@ echo count($devices);
     <button onclick="toggleToken(this)" style="background:none;border:none;cursor:pointer;font-size:14px;vertical-align:middle;">👁️‍🗨️</button>
   </td>
   <td style="padding:6px 4px;">
-    <form method="GET" style="display:inline;">
+    <form method="POST" style="display:inline;">
     <input type="hidden" name="cmd" value="save">
     <input type="hidden" name="delete_idx" value="<?=$idx?>">
     <button type="submit" style="background:none;border:none;color:#c00;cursor:pointer;font-size:12px;padding:0;" onclick="return confirm('确认删除此设备？')">删除</button>
