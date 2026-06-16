@@ -1,0 +1,54 @@
+<?php
+# Harmraid Push - Device Registration API
+# Accessed via /plugins/harmraid-push/api/register
+# Authentication: x-api-key (handled automatically by emhttp)
+
+$configDir = '/boot/config/plugins/harmraid-push';
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+  http_response_code(405);
+  echo json_encode(['status' => 'error', 'message' => 'Method not allowed']);
+  exit;
+}
+
+$body = json_decode(file_get_contents('php://input'), true);
+$token = $body['token'] ?? '';
+$deviceName = $body['device_name'] ?? '未知设备';
+
+if (!$token) {
+  http_response_code(400);
+  echo json_encode(['status' => 'error', 'message' => 'Missing token']);
+  exit;
+}
+
+if (!is_dir($configDir)) {
+  mkdir($configDir, 0755, true);
+}
+
+# Append token
+file_put_contents("$configDir/push_token.txt", $token . "\n", FILE_APPEND | LOCK_EX);
+@chmod("$configDir/push_token.txt", 0666);
+
+# Update devices.json
+$devices = [];
+$devicesJson = @file_get_contents("$configDir/devices.json");
+if ($devicesJson) { $devices = json_decode($devicesJson, true) ?? []; }
+$devices[] = ['token' => $token, 'device_name' => $deviceName];
+file_put_contents("$configDir/devices.json", json_encode($devices));
+@chmod("$configDir/devices.json", 0666);
+
+# Send test push to verify the full chain
+$testResult = '';
+$pushScript = '/usr/local/emhttp/plugins/harmraid-push/send-push.sh';
+if (file_exists($pushScript)) {
+  $output = [];
+  exec("$pushScript '推送注册成功' '设备 $deviceName 已成功注册' 'info' 2>&1", $output, $exitCode);
+  $testResult = $exitCode === 0 ? 'test_push_ok' : 'test_push_failed';
+}
+
+echo json_encode([
+  'status' => 'ok',
+  'token' => $token,
+  'device_name' => $deviceName,
+  'test_push' => $testResult
+]);
