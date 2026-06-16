@@ -114,17 +114,36 @@ echo count($devices);
 <?php $idx = 0; foreach ($devices as $d): ?>
 <tr style="border-bottom:1px solid #eee;">
   <td style="padding:6px 4px;font-size:13px;"><?=htmlspecialchars($d['device_name'])?></td>
-  <td style="padding:6px 4px;"><code style="font-size:11px;color:#666;"><?=substr($d['token'],0,20)?>...</code></td>
   <td style="padding:6px 4px;">
+    <code class="token-mask" data-token="<?=htmlspecialchars($d['token'])?>"
+          style="font-size:11px;color:#666;cursor:pointer;" onclick="toggleToken(this)">
+      <?=substr($d['token'],0,8)?>********
+    </code>
+  </td>
+  <td style="padding:6px 4px;white-space:nowrap;">
+    <button onclick="toggleToken(this.parentElement.previousElementSibling.querySelector('.token-mask'))"
+            style="background:none;border:none;color:#666;cursor:pointer;font-size:12px;">显示</button>
     <form method="GET" style="display:inline;">
     <input type="hidden" name="action" value="save">
     <input type="hidden" name="delete_idx" value="<?=$idx?>">
-    <button type="submit" style="background:none;border:none;color:#c00;cursor:pointer;font-size:12px;padding:0;" onclick="return confirm('确认删除此设备？')">删除</button>
+    <button type="submit" style="background:none;border:none;color:#c00;cursor:pointer;font-size:12px;padding:0;margin-left:4px;" onclick="return confirm('确认删除此设备？')">删除</button>
     </form>
   </td>
 </tr>
 <?php $idx++; endforeach; ?>
 </table>
+<script>
+function toggleToken(el) {
+  var full = el.dataset.token || '';
+  if (!full) return;
+  var masked = full.substring(0,8) + '********';
+  if (el.textContent === full) {
+    el.textContent = masked;
+  } else {
+    el.textContent = full;
+  }
+}
+</script>
 <?php else: ?>
 <p style="color:#888;margin-top:4px;">无推送令牌</p>
 <?php endif; ?>
