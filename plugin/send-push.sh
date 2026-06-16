@@ -112,4 +112,5 @@ RESP=$(curl -s -X POST \
 EOF
 )"
 
+echo "HMS response: $(echo $RESP | jq -c '.code // .msg // "unknown"')"
 logger -t harmraid-push "Push sent: ${TITLE} (${SEVERITY}) - $(echo $RESP | jq -c '.msg // .code')"
