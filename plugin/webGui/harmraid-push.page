@@ -141,7 +141,7 @@ function toggleToken(btn) {
     btn.textContent = '\u{1F441}';
   } else {
     wrap.textContent = full;
-    btn.textContent = '\u{1F441}\u0338';
+    btn.textContent = '\u{1F441}\u{FE0F}\u{200D}\u{1F5E8}\u{FE0F}';
   }
 }
 </script>
