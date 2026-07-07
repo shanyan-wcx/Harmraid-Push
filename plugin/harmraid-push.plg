@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "harmraid-push">
 <!ENTITY author    "shanyan-wcx">
-<!ENTITY version   "1.3.3">
+<!ENTITY version   "1.3.4">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/shanyan-wcx/Harmraid-Push/main/plugin/&name;.plg">
 <!ENTITY github    "https://github.com/shanyan-wcx/Harmraid-Push">
 ]>
@@ -45,6 +45,10 @@ rm -rf /usr/local/emhttp/plugins/harmraid-push
       chmod +x /usr/local/emhttp/plugins/harmraid-push/send-push.sh
       chmod +x /usr/local/emhttp/plugins/harmraid-push/scripts/configure-push
 
+      # 清理旧版本 agent 脚本，确保 Dynamix 用新 XML
+      rm -f /boot/config/plugins/dynamix/notifications/agents/HarmraidPush.sh
+      rm -f /boot/config/plugins/dynamix/notifications/agents-disabled/HarmraidPush.sh
+
       # 直接生成通知代理脚本（默认启用）
       mkdir -p /boot/config/plugins/dynamix/notifications/agents
       cat > /boot/config/plugins/dynamix/notifications/agents/HarmraidPush.sh << 'AGENT'
@@ -68,7 +72,7 @@ AGENT
         cp /usr/local/emhttp/plugins/harmraid-push/config/settings.json /boot/config/plugins/harmraid-push/settings.json
       fi
 
-      logger -t harmraid-push "Plugin installed v1.3.3"
+      logger -t harmraid-push "Plugin installed v1.3.4"
 
       # 清理旧版本遗留文件
       rm -f /usr/local/emhttp/plugins/harmraid-push/README.md
