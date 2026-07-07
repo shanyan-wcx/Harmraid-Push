@@ -91,7 +91,7 @@ cat > "$PAYLOAD_FILE" << EOFJSON
       "title": "${TITLE}",
       "body": "${CONTENT}",
       "urgency": "${URGENCY}",
-      "clickAction": { "actionType": 0 },
+      "clickAction": { "actionType": 0, "data": { "source": "harmraid-push" } },
       "foregroundShow": true
     },
     "data": "{\"title\":\"${TITLE}\",\"content\":\"${CONTENT}\",\"severity\":\"${SEVERITY}\"}"
